@@ -41,17 +41,26 @@ export interface ValidationResult {
   score: number; // 0 to 100
   missingFields: MissingFieldWarning[];
   recommendations: string[];
+  hasSufficientEvidence?: boolean;
+  evidenceWarning?: string;
 }
 
 export interface LegalStatuteCitation {
   id: string;
   actName: string;
   actShortTitle: string;
+  actNumber?: string;
+  year?: number;
+  chapter?: string;
   sectionNumber: string;
   sectionTitle: string;
   statuteText: string;
   relevanceExplanation: string;
   applicabilityTag: string;
+  jurisdiction?: string;
+  sourceUrl?: string; // India Code Official URI
+  effectiveDate?: string;
+  confidenceScore?: number; // 0.0 to 1.0 (vector cosine similarity / TF-IDF score)
 }
 
 export interface ClauseAnalysis {
@@ -84,6 +93,8 @@ export interface GeneratedDocument {
   citations: LegalStatuteCitation[];
   validationWarnings: MissingFieldWarning[];
   disclaimer: string;
+  hasSufficientEvidence?: boolean;
+  evidenceWarning?: string;
 }
 
 export interface AdvocateProfile {

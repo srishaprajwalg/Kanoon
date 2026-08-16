@@ -6,7 +6,7 @@ import { LegalRAGEngine } from '../services/ragEngine';
 import { 
   FileText, Sparkles, Shield, Plus, Trash2, Download, Printer, 
   Copy, CheckCircle2, ChevronRight, Scale, Info, Layers, RefreshCw,
-  AlertTriangle, BookOpen, Check, Lock
+  AlertTriangle, BookOpen, Check, Lock, ExternalLink
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 
@@ -724,22 +724,70 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                     <span>Retrieved Indian Legal Chunks (RAG)</span>
                   </h3>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                    Authentic Chunks
+                    India Code Verified
                   </span>
                 </div>
+
+                {generatedDoc.hasSufficientEvidence === false && (
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start space-x-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block font-bold">Insufficient Statutory Evidence Warning</strong>
+                      <p className="text-[11px] text-amber-300/80 mt-0.5">
+                        {generatedDoc.evidenceWarning || 'Insufficient statutory evidence was retrieved to confidently support specific statutory section claims.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2.5">
                   {generatedDoc.citations.map((cit, idx) => (
                     <div key={idx} className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 text-xs">
                       <div className="flex items-center justify-between font-bold text-slate-200">
-                        <span className="text-amber-400">{cit.actShortTitle}</span>
-                        <span className="font-mono text-[11px] bg-slate-800 px-1.5 py-0.5 rounded">{cit.sectionNumber}</span>
+                        <span className="text-amber-400 flex items-center space-x-1">
+                          <span>{cit.actShortTitle}</span>
+                          {cit.sourceUrl && (
+                            <a
+                              href={cit.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-amber-400 hover:text-amber-300 ml-1 inline-flex items-center"
+                              title="View official statutory text on India Code"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </span>
+                        <div className="flex items-center space-x-1.5">
+                          {cit.confidenceScore && (
+                            <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                              {Math.round(cit.confidenceScore * 100)}% Vector Similarity
+                            </span>
+                          )}
+                          <span className="font-mono text-[11px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">{cit.sectionNumber}</span>
+                        </div>
                       </div>
                       <span className="font-semibold block text-slate-300">{cit.sectionTitle}</span>
+                      {cit.chapter && (
+                        <span className="text-[10px] text-slate-400 block font-mono">{cit.chapter} ({cit.actNumber || cit.year})</span>
+                      )}
                       <p className="text-slate-400 text-[11px] font-serif italic border-l-2 border-amber-500/50 pl-2">
                         "{cit.statuteText}"
                       </p>
-                      <span className="text-[10px] text-amber-400/90 block">📌 {cit.relevanceExplanation}</span>
+                      <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400">
+                        <span className="text-amber-400/90">📌 {cit.relevanceExplanation}</span>
+                        {cit.sourceUrl && (
+                          <a
+                            href={cit.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-slate-400 hover:text-amber-300 underline font-mono flex items-center space-x-0.5"
+                          >
+                            <span>India Code</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

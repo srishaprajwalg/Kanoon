@@ -25,7 +25,7 @@ app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
     aiConnected: Boolean(aiClient),
-    ragEngine: 'Document-Aware Vector RAG Engine v2.0',
+    ragEngine: 'India Code Production Vector RAG Engine v2.5',
     timestamp: new Date().toISOString()
   });
 });
@@ -49,8 +49,18 @@ app.post('/api/validate-inputs', (req, res) => {
 app.get('/api/rag-search', (req, res) => {
   const query = (req.query.q as string) || '';
   const templateId = (req.query.templateId as string) || undefined;
-  const citations = LegalRAGEngine.retrieveRelevantStatutes(query, templateId, 5);
-  res.json({ query, count: citations.length, citations });
+  const minScore = req.query.minScore ? parseFloat(req.query.minScore as string) : LegalRAGEngine.MIN_CONFIDENCE_THRESHOLD;
+
+  const citations = LegalRAGEngine.retrieveRelevantStatutes(query, templateId, 5, minScore);
+  const hasSufficientEvidence = citations.length > 0;
+
+  res.json({
+    query,
+    count: citations.length,
+    hasSufficientEvidence,
+    evidenceWarning: hasSufficientEvidence ? undefined : 'Insufficient statutory evidence was retrieved to confidently support this query under verified Indian Acts.',
+    citations
+  });
 });
 
 /**
@@ -66,11 +76,15 @@ app.post('/api/generate-document', async (req, res) => {
 
     // 2. Document-Type Aware RAG Retrieval: fetch relevant legal statutory chunks
     const citations: LegalStatuteCitation[] = LegalRAGEngine.retrieveCitationsForDocument(formData);
+    const hasSufficientEvidence = validation.hasSufficientEvidence ?? (citations.length > 0);
+    const evidenceWarning = validation.evidenceWarning;
 
-    // Build ACTUAL statutory text block to feed directly into Gemini prompt
-    const statutoryContextPrompt = citations.map((c, i) =>
-      `[Retrieved Statute Chunk ${i + 1}]: ${c.actName} (${c.sectionNumber} - ${c.sectionTitle})\nStatute Text: "${c.statuteText}"`
-    ).join('\n\n');
+    // Build ACTUAL statutory text block with provenance links to feed directly into Gemini prompt
+    const statutoryContextPrompt = hasSufficientEvidence
+      ? citations.map((c, i) =>
+          `[Retrieved Statute Chunk ${i + 1}]: ${c.actName} (${c.sectionNumber} - ${c.sectionTitle})\nChapter: ${c.chapter || 'N/A'} | Act Number: ${c.actNumber || 'N/A'}\nStatute Text: "${c.statuteText}"\nOfficial India Code Provenance: ${c.sourceUrl || 'https://www.indiacode.nic.in'}\nRelevance Score: ${Math.round((c.confidenceScore || 0.8) * 100)}%`
+        ).join('\n\n')
+      : 'NO SUFFICIENT VERIFIED STATUTORY EVIDENCE FOUND IN CORPUS FOR CUSTOM PROVISION.';
 
     // 3. Look up State e-Stamp Regulations
     const stampInfo = STAMP_DUTY_GUIDE.find(
@@ -113,10 +127,13 @@ Draft a structured, plain-language, legally sound agreement under Indian law bas
 === RETRIEVED STATUTORY CHUNKS (GROUND YOUR GENERATION ON THESE) ===
 ${statutoryContextPrompt}
 
+CRITICAL SAFETY REQUIREMENT:
+You MUST NOT fabricate statutory citations or section numbers. If the provided statutory chunks do NOT contain explicit statutory evidence for a provision, DO NOT invent a section number. Instead, state clearly: "Insufficient statutory evidence was retrieved to confidently support this provision."
+
 INSTRUCTIONS:
-1. Incorporate and cite the retrieved statutory sections explicitly inside relevant clauses.
+1. Incorporate and cite ONLY the retrieved statutory sections explicitly inside relevant clauses.
 2. Maintain plain-language clarity while preserving legal enforceability under Indian law.
-3. State clearly that stamp duty and registration requirements depend on applicable state laws (e.g. Maharashtra Rent Control Act requires registration regardless of tenure). Do NOT make blanket statements that 11-month agreements are universally exempt from registration.
+3. State clearly that stamp duty and registration requirements depend on applicable state laws (e.g. Maharashtra Rent Control Act requires registration regardless of tenure). Do NOT make blanket claims that 11-month agreements are universally exempt from registration.
 4. Output clean plain text formatted with numbered sections.`;
 
         const response = await aiClient.models.generateContent({
@@ -156,7 +173,7 @@ The Licensor hereby permits the Licensee to occupy the premises situated at ${fo
 - Notice Period: Post lock-in, either party may terminate by giving ${formData.noticePeriodDays} days written notice.
 
 4. STATUTORY GROUNDING & REGISTRATION:
-Grounded in ${citations.map(c => `${c.actShortTitle} ${c.sectionNumber}`).join(', ')}. Registration requirements and stamp duty depend on applicable state laws.
+Grounded in ${citations.length > 0 ? citations.map(c => `${c.actShortTitle} ${c.sectionNumber}`).join(', ') : 'General Contract Law principles'}. Registration requirements and stamp duty depend on applicable state laws.
 
 5. CUSTOM AGREED TERMS:
 ${formData.customClauses.map((c, i) => `${i + 1}. ${c}`).join('\n')}
@@ -168,7 +185,7 @@ _____________________________                _____________________________
 LICENSOR                                     LICENSEE`;
       } else {
         draftText = `${formData.documentTitle.toUpperCase()}
-(Grounded in ${citations.map(c => c.actShortTitle).join(', ')})
+(Grounded in ${citations.length > 0 ? citations.map(c => c.actShortTitle).join(', ') : 'Indian Contract Act 1872'})
 
 THIS AGREEMENT is entered into at ${formData.city}, ${formData.state} on ${formData.effectiveDate}.
 
@@ -180,7 +197,7 @@ PARTIES:
 Agreed consideration of ${amountFormatted} for a duration of ${formData.durationMonths} months.
 
 2. STATUTORY GROUNDING:
-Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}.
+${citations.length > 0 ? `Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}.` : 'Insufficient statutory evidence was retrieved to confidently support specific statutory section claims.'}
 
 3. GOVERNING LAW & DISPUTES:
 Governed by laws of ${formData.governingLawState}, India. Dispute resolution via ${formData.disputeResolution}.
@@ -254,7 +271,9 @@ FIRST PARTY                                  SECOND PARTY`;
       legalActReferences: citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`),
       citations,
       validationWarnings: validation.missingFields,
-      disclaimer: 'DISCLAIMER: Kanoon AI is an automated legal documentation assistant. Documents generated are AI-assisted drafts for informational purposes under Indian law and do not constitute formal attorney-client legal advice.'
+      disclaimer: 'DISCLAIMER: Kanoon AI is an automated legal documentation assistant. Documents generated are AI-assisted drafts for informational purposes under Indian law and do not constitute formal attorney-client legal advice.',
+      hasSufficientEvidence,
+      evidenceWarning
     };
 
     res.json(result);
@@ -277,6 +296,7 @@ app.post('/api/analyze-clause', async (req, res) => {
 
     // 1. Retrieve relevant statutory citations via RAG
     const citations = LegalRAGEngine.retrieveRelevantStatutes(clauseText, undefined, 3);
+    const hasSufficientEvidence = citations.length > 0;
 
     let plainExplanation = '';
     let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
@@ -286,7 +306,9 @@ app.post('/api/analyze-clause', async (req, res) => {
     // 2. Gemini LLM Contextual Risk Analysis if AI available
     if (aiClient) {
       try {
-        const statutoryContext = citations.map(c => `${c.actShortTitle} ${c.sectionNumber}: ${c.statuteText}`).join('\n');
+        const statutoryContext = hasSufficientEvidence
+          ? citations.map(c => `${c.actShortTitle} ${c.sectionNumber}: ${c.statuteText} [Source: ${c.sourceUrl || 'India Code'}]`).join('\n')
+          : 'NO EXPLICIT STATUTORY MATCH IN CORPUS';
 
         const prompt = `You are Kanoon AI's Indian Legal Risk Inspector.
 Analyze the following legal clause for red flags, unconscionable obligations, or legal traps under Indian Law:
@@ -296,6 +318,9 @@ Analyze the following legal clause for red flags, unconscionable obligations, or
 
 === RELEVANT INDIAN STATUTES ===
 ${statutoryContext}
+
+CRITICAL SAFETY REQUIREMENT:
+If statutory evidence is missing or ambiguous, DO NOT invent fake act section numbers.
 
 Respond strictly with valid JSON with keys:
 - "plainExplanation": (string - plain English explanation of what this clause forces the user to agree to)
@@ -355,6 +380,8 @@ Respond strictly with valid JSON with keys:
       riskLevel,
       riskExplanation,
       saferAlternative,
+      hasSufficientEvidence,
+      evidenceWarning: hasSufficientEvidence ? undefined : 'Insufficient statutory evidence was retrieved to confidently support this specific clause.',
       citations
     });
   } catch (error: any) {
