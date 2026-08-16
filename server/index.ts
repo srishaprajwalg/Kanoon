@@ -6,13 +6,16 @@ import { LegalRAGEngine } from '../src/services/ragEngine.js';
 import type { DocumentFormData, GeneratedDocument, ClauseAnalysis, LegalStatuteCitation } from '../src/types/index.js';
 import { STAMP_DUTY_GUIDE } from '../src/data/stampDutyData.js';
 
+import { extractDocumentContent } from '../src/services/documentExtractor.js';
+import { performFullDocumentReview } from '../src/services/documentReviewer.js';
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: '15mb' }));
 
 // Initialize Google Gemini AI client securely on backend
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
@@ -150,6 +153,17 @@ INSTRUCTIONS:
       }
     }
 
+    // Build specialized rider text section
+    let customRiderSection = '';
+    const selectedConfigs = formData.selectedClauseConfigs || [];
+    if (selectedConfigs.length > 0) {
+      customRiderSection = '\n\n5. SPECIALIZED CONTRACT RIDERS & CUSTOM CLAUSES:\n' +
+        selectedConfigs.map((c: any, i: number) => `5.${i + 1} [${c.category.toUpperCase()}] ${c.title.toUpperCase()}: ${c.clauseText}`).join('\n\n');
+    } else if (formData.customClauses && formData.customClauses.length > 0) {
+      customRiderSection = '\n\n5. CUSTOM AGREED TERMS:\n' +
+        formData.customClauses.map((c: string, i: number) => `${i + 1}. ${c}`).join('\n');
+    }
+
     // Fallback to RAG-Grounded Structuring if LLM offline or unconfigured
     if (!draftText) {
       if (formData.templateId === 'rent_agreement') {
@@ -176,10 +190,7 @@ The Licensor hereby permits the Licensee to occupy the premises situated at ${fo
 - Notice Period: Post lock-in, either party may terminate by giving ${formData.noticePeriodDays} days written notice.
 
 4. STATUTORY GROUNDING & REGISTRATION:
-Grounded in ${citations.length > 0 ? citations.map(c => `${c.actShortTitle} ${c.sectionNumber}`).join(', ') : 'General Contract Law principles'}. Registration requirements and stamp duty depend on applicable state laws.
-
-5. CUSTOM AGREED TERMS:
-${formData.customClauses.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+Grounded in ${citations.length > 0 ? citations.map(c => `${c.actShortTitle} ${c.sectionNumber}`).join(', ') : 'General Contract Law principles'}. Registration requirements and stamp duty depend on applicable state laws.${customRiderSection}
 
 6. DISPUTE RESOLUTION:
 Governed by laws of ${formData.governingLawState}, India. Disputes resolved via ${formData.disputeResolution}.
@@ -200,7 +211,7 @@ PARTIES:
 Agreed consideration of ${amountFormatted} for a duration of ${formData.durationMonths} months.
 
 2. STATUTORY GROUNDING:
-${citations.length > 0 ? `Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}.` : 'Insufficient statutory evidence was retrieved to confidently support specific statutory section claims.'}
+${citations.length > 0 ? `Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}.` : 'Insufficient statutory evidence was retrieved to confidently support specific statutory section claims.'}${customRiderSection}
 
 3. GOVERNING LAW & DISPUTES:
 Governed by laws of ${formData.governingLawState}, India. Dispute resolution via ${formData.disputeResolution}.
@@ -216,6 +227,7 @@ FIRST PARTY                                  SECOND PARTY`;
 - Duration: ${formData.durationMonths} months
 - Minimum Commitment (Lock-in): ${formData.lockInPeriodMonths || 0} months
 - Notice Period: ${formData.noticePeriodDays} days advance notice
+- Customized Riders Included: ${selectedConfigs.length} special clauses
 - Legal Registration Note: Stamp duty rates and compulsory registration depend on local state law.`;
 
     clauses = [
@@ -228,7 +240,8 @@ FIRST PARTY                                  SECOND PARTY`;
         riskExplanation: 'Standard tenure clause complying with Indian statutory framework.',
         recommendation: 'Attach state e-Stamp paper as prescribed by local sub-registrar.',
         saferAlternative: 'Specify exact tenure with clear renewal and stamp duty responsibility.',
-        citation: citations[0]
+        citation: citations[0],
+        clauseSourceType: 'statutory'
       },
       {
         id: 'cl_2',
@@ -239,7 +252,8 @@ FIRST PARTY                                  SECOND PARTY`;
         riskExplanation: 'Long lock-in periods create financial exposure if job or personal situation changes.',
         recommendation: 'Negotiate a shorter lock-in period or add employment transfer exceptions.',
         saferAlternative: 'Either party may terminate during lock-in period upon 30 days notice in case of official job transfer.',
-        citation: citations[1] || citations[0]
+        citation: citations[1] || citations[0],
+        clauseSourceType: 'statutory'
       },
       {
         id: 'cl_3',
@@ -250,9 +264,33 @@ FIRST PARTY                                  SECOND PARTY`;
         riskExplanation: 'Protects tenant against arbitrary deposit retention.',
         recommendation: 'Conduct joint inspection on hand-over day.',
         saferAlternative: 'Deposit refunded within 7 working days via direct bank transfer (NEFT/UPI).',
-        citation: citations[2] || citations[0]
+        citation: citations[2] || citations[0],
+        clauseSourceType: 'statutory'
       }
     ];
+
+    // Add selected/custom clause rider analyses
+    selectedConfigs.forEach((cfg: any, idx: number) => {
+      const matchedCitation = citations.find(c =>
+        c.statuteText.toLowerCase().includes(cfg.category.toLowerCase()) ||
+        c.actShortTitle.toLowerCase().includes(cfg.category.toLowerCase())
+      ) || citations[idx % citations.length];
+
+      clauses.push({
+        id: `custom_rider_${idx + 1}`,
+        clauseTitle: `${cfg.title} (${cfg.category})`,
+        legaleseText: cfg.clauseText,
+        plainLanguageText: `Customized Rider: ${cfg.clauseText}`,
+        riskLevel: cfg.isCustom ? 'medium' : 'low',
+        riskExplanation: cfg.isCustom
+          ? 'User-customized clause rider added to contract.'
+          : `Standard ${cfg.category} rider integrated with custom parameters.`,
+        recommendation: 'Ensure both parties initial this clause on final physical execution.',
+        saferAlternative: cfg.isCustom ? undefined : 'Parameters tuned according to selected options.',
+        citation: matchedCitation,
+        clauseSourceType: cfg.sourceType || (cfg.isCustom ? 'user_custom' : 'recommended')
+      });
+    });
 
     // DYNAMIC Risk Score calculation from actual detected clause risks
     const dynamicRiskScore = LegalRAGEngine.calculateDynamicRiskScore(clauses);
@@ -390,6 +428,46 @@ Respond strictly with valid JSON with keys:
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Clause analysis failed' });
+  }
+});
+
+/**
+ * PHASE 2 — EXISTING DOCUMENT REVIEW / LEGAL AUDIT ENDPOINT
+ * Ephemeral processing: extracts text, segments clauses, queries statutory RAG corpus,
+ * evaluates risks, and returns full structured review report without storing files.
+ */
+app.post('/api/review-document', async (req, res) => {
+  try {
+    const { fileData, fileName, mimeType, documentText } = req.body;
+
+    if (!fileData && !documentText) {
+      return res.status(400).json({ error: 'Either fileData (base64) or documentText must be provided' });
+    }
+
+    const filenameStr = fileName || 'Uploaded_Document.txt';
+    let extractedDoc;
+
+    if (documentText) {
+      const textClean = String(documentText).trim();
+      if (textClean.length < 15) {
+        return res.status(400).json({ error: 'Provided document text is empty or too short (minimum 15 characters required).' });
+      }
+      extractedDoc = {
+        text: textClean,
+        pageCount: Math.ceil(textClean.length / 3000),
+        filename: filenameStr,
+        mimeType: mimeType || 'text/plain',
+        pages: [{ pageNumber: 1, text: textClean }]
+      };
+    } else {
+      extractedDoc = await extractDocumentContent(fileData, filenameStr, mimeType);
+    }
+
+    const report = await performFullDocumentReview(extractedDoc);
+    res.json(report);
+  } catch (error: any) {
+    console.error('Document Review Error:', error.message);
+    res.status(400).json({ error: error.message || 'Failed to review uploaded document' });
   }
 });
 

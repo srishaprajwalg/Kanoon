@@ -6,6 +6,7 @@ import { JargonSimplifier } from './components/JargonSimplifier';
 import { LegalDatabase } from './components/LegalDatabase';
 import { ExpertHub } from './components/ExpertHub';
 import { PresentationView } from './components/PresentationView';
+import { DocumentReviewer } from './components/DocumentReviewer';
 import { DocumentViewerModal } from './components/DocumentViewerModal';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import { Scale, ShieldAlert, Heart, ExternalLink, Presentation } from 'lucide-react';
@@ -43,6 +44,10 @@ export function App() {
             apiKey={apiKey}
             onOpenDocumentModal={(doc) => setViewingDocument(doc)}
           />
+        )}
+
+        {activeTab === 'review' && (
+          <DocumentReviewer onNavigateToExpert={() => setActiveTab('experts')} />
         )}
 
         {activeTab === 'simplifier' && (

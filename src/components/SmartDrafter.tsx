@@ -3,10 +3,11 @@ import { LEGAL_TEMPLATES } from '../data/legalTemplates';
 import type { DocumentFormData, GeneratedDocument, ValidationResult } from '../types';
 import { KanoonAIService } from '../services/aiService';
 import { LegalRAGEngine } from '../services/ragEngine';
+import { ClauseCustomizer } from './ClauseCustomizer';
 import { 
   FileText, Sparkles, Shield, Plus, Trash2, Download, Printer, 
   Copy, CheckCircle2, ChevronRight, Scale, Info, Layers, RefreshCw,
-  AlertTriangle, BookOpen, Check, Lock, ExternalLink
+  AlertTriangle, BookOpen, Check, Lock, ExternalLink, Sliders
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 
@@ -18,6 +19,7 @@ interface SmartDrafterProps {
 export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocumentModal }) => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('rent_agreement');
   const [step, setStep] = useState<number>(1);
+  const [step2SubTab, setStep2SubTab] = useState<'terms' | 'clauses'>('terms');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generatedDoc, setGeneratedDoc] = useState<GeneratedDocument | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
@@ -334,7 +336,49 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
             )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* STEP 2 SUB-TAB NAVIGATION */}
+          <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
+            <button
+              onClick={() => setStep2SubTab('terms')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                step2SubTab === 'terms'
+                  ? 'bg-amber-500 text-slate-950 shadow-md'
+                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>1. Basic Terms & Parties</span>
+            </button>
+
+            <button
+              onClick={() => setStep2SubTab('clauses')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                step2SubTab === 'clauses'
+                  ? 'bg-amber-500 text-slate-950 shadow-md'
+                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+            >
+              <Sliders className="w-4 h-4" />
+              <span>2. Clause Library & Custom Riders</span>
+              {(formData.selectedClauseConfigs?.length || 0) > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-950 text-amber-400 font-extrabold border border-amber-500/30">
+                  {formData.selectedClauseConfigs?.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {step2SubTab === 'clauses' ? (
+            <ClauseCustomizer
+              templateId={formData.templateId}
+              selectedConfigs={formData.selectedClauseConfigs || []}
+              customClauses={formData.customUserClauses || []}
+              onChangeSelectedConfigs={(configs) => setFormData(prev => ({ ...prev, selectedClauseConfigs: configs }))}
+              onChangeCustomClauses={(customs) => setFormData(prev => ({ ...prev, customUserClauses: customs }))}
+            />
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Party A (First Party) Card */}
             <div className="glass-card p-5 rounded-2xl space-y-4 border border-slate-800">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -602,7 +646,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                     value={clause}
                     onChange={(e) => handleClauseChange(idx, e.target.value)}
                     placeholder="Enter custom requirement e.g., 'No structural alterations without written consent'"
-                    className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
                   />
                   <button
                     type="button"
@@ -615,6 +659,8 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               ))}
             </div>
           </div>
+          </div>
+          )}
 
           {/* Privacy & AI Consent Box */}
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">

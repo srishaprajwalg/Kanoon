@@ -263,19 +263,23 @@ export class LegalRAGEngine {
   }
 
   /**
-   * Retrieves relevant legal citations based on full document metadata.
+   * Retrieves relevant legal citations based on full document metadata & customized clause riders.
    */
   public static retrieveCitationsForDocument(formData: DocumentFormData): LegalStatuteCitation[] {
-    const combinedQuery = `${formData.documentTitle} ${formData.templateId} ${formData.disputeResolution} ${formData.customClauses.join(' ')} ${formData.state}`;
-    return this.retrieveRelevantStatutes(combinedQuery, formData.templateId, 4);
+    const selectedTexts = formData.selectedClauseConfigs ? formData.selectedClauseConfigs.map(c => `${c.title} ${c.category} ${c.clauseText}`).join(' ') : '';
+    const customTexts = formData.customUserClauses ? formData.customUserClauses.map(c => `${c.title} ${c.category} ${c.clauseText}`).join(' ') : '';
+    const combinedQuery = `${formData.documentTitle} ${formData.templateId} ${formData.disputeResolution} ${formData.customClauses.join(' ')} ${selectedTexts} ${customTexts} ${formData.state}`;
+    return this.retrieveRelevantStatutes(combinedQuery, formData.templateId, 5);
   }
 
   /**
-   * Async dense vector retrieval for full document metadata.
+   * Async dense vector retrieval for full document metadata & customized clause riders.
    */
   public static async retrieveCitationsForDocumentAsync(formData: DocumentFormData): Promise<LegalStatuteCitation[]> {
-    const combinedQuery = `${formData.documentTitle} ${formData.templateId} ${formData.disputeResolution} ${formData.customClauses.join(' ')} ${formData.state}`;
-    return this.retrieveRelevantStatutesAsync(combinedQuery, formData.templateId, 4);
+    const selectedTexts = formData.selectedClauseConfigs ? formData.selectedClauseConfigs.map(c => `${c.title} ${c.category} ${c.clauseText}`).join(' ') : '';
+    const customTexts = formData.customUserClauses ? formData.customUserClauses.map(c => `${c.title} ${c.category} ${c.clauseText}`).join(' ') : '';
+    const combinedQuery = `${formData.documentTitle} ${formData.templateId} ${formData.disputeResolution} ${formData.customClauses.join(' ')} ${selectedTexts} ${customTexts} ${formData.state}`;
+    return this.retrieveRelevantStatutesAsync(combinedQuery, formData.templateId, 5);
   }
 
   /**

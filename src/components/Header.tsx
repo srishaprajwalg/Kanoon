@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ActiveTab } from '../types';
-import { Scale, FileText, Sparkles, BookOpen, UserCheck, Key, Shield, Presentation } from 'lucide-react';
+import { Scale, FileText, Sparkles, BookOpen, UserCheck, Key, Shield, Presentation, FileSearch } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -49,6 +49,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <FileText className="w-4 h-4" />
               <span>Smart Drafter</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('review')}
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'review'
+                  ? 'bg-amber-500 text-slate-950 font-semibold shadow-md shadow-amber-500/20'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <FileSearch className="w-4 h-4" />
+              <span>Review Document</span>
             </button>
 
             <button

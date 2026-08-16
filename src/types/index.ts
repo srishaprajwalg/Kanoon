@@ -1,4 +1,4 @@
-export type ActiveTab = 'drafter' | 'simplifier' | 'database' | 'experts' | 'presentation';
+export type ActiveTab = 'drafter' | 'review' | 'simplifier' | 'database' | 'experts' | 'presentation';
 
 export interface LegalParty {
   name: string;
@@ -6,6 +6,45 @@ export interface LegalParty {
   address: string;
   contact: string;
   panOrGst?: string;
+}
+
+export interface ParameterOption {
+  key: string;
+  label: string;
+  type: 'select' | 'number' | 'text';
+  defaultValue: string | number;
+  options?: { label: string; value: string | number }[];
+}
+
+export interface ClauseLibraryItem {
+  id: string;
+  name: string;
+  category: 'Confidentiality' | 'IP' | 'Liability' | 'Dispute' | 'Termination' | 'Payment' | 'General';
+  shortDescription: string;
+  plainEnglishExplanation: string;
+  whyItMatters: string;
+  applicableDocumentTypes: string[];
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  defaultClauseText: string;
+  parameters?: ParameterOption[];
+  relatedStatuteKeywords?: string[];
+}
+
+export interface CustomUserClause {
+  id: string;
+  title: string;
+  category: string;
+  clauseText: string;
+}
+
+export interface SelectedClauseConfig {
+  clauseId: string;
+  isCustom: boolean;
+  title: string;
+  category: string;
+  clauseText: string;
+  paramValues?: Record<string, string | number>;
+  sourceType: 'statutory' | 'recommended' | 'user_custom';
 }
 
 export interface DocumentFormData {
@@ -24,6 +63,8 @@ export interface DocumentFormData {
   governingLawState: string;
   disputeResolution: 'Arbitration' | 'Courts' | 'Mutual Conciliation';
   customClauses: string[];
+  selectedClauseConfigs?: SelectedClauseConfig[];
+  customUserClauses?: CustomUserClause[];
   additionalNotes?: string;
   usePlainLanguage: boolean;
 }
@@ -81,6 +122,7 @@ export interface ClauseAnalysis {
   recommendation: string;
   saferAlternative?: string;
   citation?: LegalStatuteCitation;
+  clauseSourceType?: 'statutory' | 'recommended' | 'user_custom';
 }
 
 export interface GeneratedDocument {
@@ -156,3 +198,139 @@ export interface LegalTemplate {
   estimatedTime: string;
   defaultFormData: Partial<DocumentFormData>;
 }
+
+export interface ExtractedPage {
+  pageNumber: number;
+  text: string;
+}
+
+export interface ExtractedDocument {
+  text: string;
+  pageCount: number;
+  filename: string;
+  mimeType: string;
+  pages: ExtractedPage[];
+}
+
+export interface ParsedClause {
+  id: string;
+  sectionNumber?: string;
+  heading: string;
+  originalText: string;
+  pageNumber: number;
+}
+
+export interface ReviewedClauseAnalysis extends ParsedClause {
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  plainExplanation: string;
+  riskExplanation: string;
+  saferAlternative?: string;
+  citations: LegalStatuteCitation[];
+  hasSufficientEvidence: boolean;
+  evidenceWarning?: string;
+}
+
+export interface DocumentReviewIssue {
+  id: string;
+  title: string;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  explanation: string;
+  clauseId?: string;
+  recommendation: string;
+}
+
+export interface MissingClauseInfo {
+  clauseType: string;
+  importance: 'critical' | 'recommended' | 'standard';
+  explanation: string;
+  suggestedTemplate: string;
+}
+
+export interface DocumentInconsistencyInfo {
+  issueTitle: string;
+  explanation: string;
+  conflictingClauses: string[];
+}
+
+export interface DocumentTypeResult {
+  documentType: string;
+  label: string;
+  confidence: number;
+}
+
+export interface DocumentReviewReport {
+  documentType: string;
+  documentTypeLabel: string;
+  documentTypeConfidence: number;
+  pageCount: number;
+  clauseCount: number;
+  overallRiskScore: number; // 0-100 (100 = completely safe, lower = higher risk)
+  overallRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  executiveSummary: string;
+  criticalIssues: DocumentReviewIssue[];
+  highRiskIssues: DocumentReviewIssue[];
+  mediumRiskIssues: DocumentReviewIssue[];
+  missingClauses: MissingClauseInfo[];
+  inconsistencies: DocumentInconsistencyInfo[];
+  clauses: ReviewedClauseAnalysis[];
+  complianceGuidance: string[];
+  citations: LegalStatuteCitation[];
+  hasSufficientEvidence?: boolean;
+}
+
+export interface LegalRiskBriefIssueItem {
+  id: string;
+  clauseTitle?: string;
+  clauseNumber?: string;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  plainEnglishExplanation: string;
+  recommendedAction: string;
+  saferAlternative?: string;
+  citations: LegalStatuteCitation[];
+}
+
+export interface LegalRiskBriefMissingItem {
+  clauseType: string;
+  importance: 'critical' | 'recommended' | 'standard';
+  whyItMatters: string;
+  recommendedAction: string;
+}
+
+export interface LegalRiskBriefInconsistencyItem {
+  issueTitle: string;
+  explanation: string;
+  recommendedAction: string;
+  conflictingClauses: string[];
+}
+
+export interface LegalRiskBrief {
+  id: string;
+  createdAt: string;
+  sourceType: 'drafted' | 'uploaded';
+  documentTitle: string;
+  documentType: string;
+  jurisdiction: string;
+  parties?: {
+    partyA?: string;
+    partyB?: string;
+  };
+  executiveSummary: {
+    summaryText: string;
+    overallRiskScore: number; // 0 - 100
+    overallRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  };
+  criticalIssues: LegalRiskBriefIssueItem[];
+  missingProvisions: LegalRiskBriefMissingItem[];
+  inconsistencies: LegalRiskBriefInconsistencyItem[];
+  citations: LegalStatuteCitation[];
+  hasSufficientEvidence: boolean;
+  evidenceWarning?: string;
+  recommendedQuestions: string[];
+  userNotes?: string;
+  selectedAdvocate?: AdvocateProfile;
+  handoffStatus: 'ai_completed' | 'professional_review_recommended' | 'advocate_assigned';
+  disclaimer: string;
+}
+
+

@@ -1,7 +1,9 @@
-import React from 'react';
-import type { GeneratedDocument } from '../types';
+import React, { useState } from 'react';
+import type { GeneratedDocument, LegalRiskBrief } from '../types';
 import { Printer, Download, Copy, X, CheckCircle2, Scale } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { generateBriefFromDraftedDocument } from '../services/briefGenerator';
+import { LegalRiskBriefModal } from './LegalRiskBriefModal';
 
 interface DocumentViewerModalProps {
   document: GeneratedDocument | null;
@@ -9,9 +11,17 @@ interface DocumentViewerModalProps {
 }
 
 export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ document, onClose }) => {
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = useState(false);
+  const [briefModalOpen, setBriefModalOpen] = useState(false);
+  const [currentBrief, setCurrentBrief] = useState<LegalRiskBrief | null>(null);
 
   if (!document) return null;
+
+  const handleConsultExpert = () => {
+    const brief = generateBriefFromDraftedDocument(document);
+    setCurrentBrief(brief);
+    setBriefModalOpen(true);
+  };
 
   const handlePrint = () => {
     window.print();
@@ -56,7 +66,15 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap">
+            <button
+              onClick={handleConsultExpert}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-extrabold shadow"
+            >
+              <Scale className="w-3.5 h-3.5" />
+              <span>Consult Legal Expert</span>
+            </button>
+
             <button
               onClick={handleCopy}
               className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700"
@@ -67,7 +85,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
 
             <button
               onClick={handleDownloadPDF}
-              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow"
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700"
             >
               <Download className="w-3.5 h-3.5" />
               <span>PDF</span>
@@ -103,6 +121,13 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
           <span>Kanoon AI Legal Documentation Assistant</span>
         </div>
       </div>
+
+      {briefModalOpen && currentBrief && (
+        <LegalRiskBriefModal
+          brief={currentBrief}
+          onClose={() => setBriefModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

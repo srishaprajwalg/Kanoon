@@ -63,6 +63,17 @@ export class KanoonAIService {
       ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(formData.securityDeposit)
       : 'N/A';
 
+    // Build specialized rider text section
+    let customRiderSection = '';
+    const selectedConfigs = formData.selectedClauseConfigs || [];
+    if (selectedConfigs.length > 0) {
+      customRiderSection = '\n\n5. SPECIALIZED CONTRACT RIDERS & CUSTOM CLAUSES:\n' +
+        selectedConfigs.map((c, i) => `5.${i + 1} [${c.category.toUpperCase()}] ${c.title.toUpperCase()}: ${c.clauseText}`).join('\n\n');
+    } else if (formData.customClauses && formData.customClauses.length > 0) {
+      customRiderSection = '\n\n5. CUSTOM AGREED TERMS:\n' +
+        formData.customClauses.map((c, i) => `${i + 1}. ${c}`).join('\n');
+    }
+
     let draftText = '';
     if (formData.templateId === 'rent_agreement') {
       draftText = `RESIDENTIAL LEAVE AND LICENSE AGREEMENT
@@ -88,10 +99,7 @@ The Licensor hereby permits the Licensee to occupy the residential premises situ
 - Notice Period: Post lock-in, either party may terminate by giving ${formData.noticePeriodDays} days advance written notice.
 
 4. STATUTORY CITATIONS & REGISTRATION COMPLIANCE:
-Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}. Registration requirements and stamp duty depend on local state law.
-
-5. CUSTOM AGREED TERMS:
-${formData.customClauses.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}. Registration requirements and stamp duty depend on local state law.${customRiderSection}
 
 6. DISPUTE RESOLUTION & GOVERNING LAW:
 Governed by laws of ${formData.governingLawState}, India. Disputes resolved via ${formData.disputeResolution} in ${formData.city}.
@@ -112,13 +120,10 @@ PARTIES:
 Agreed consideration of ${amountFormatted} over a duration of ${formData.durationMonths} months.
 
 2. TERMINATION & NOTICE:
-Either party may terminate by giving ${formData.noticePeriodDays} days written notice.
+Either party may terminate by giving ${formData.noticePeriodDays} days written notice.${customRiderSection}
 
-3. CUSTOM TERMS:
-${formData.customClauses.map((c, i) => `${i + 1}. ${c}`).join('\n')}
-
-4. GOVERNING LAW:
-Governed by laws of ${formData.governingLawState}, India.
+3. GOVERNING LAW & DISPUTES:
+Governed by laws of ${formData.governingLawState}, India. Disputes resolved via ${formData.disputeResolution}.
 
 _____________________________                _____________________________
 FIRST PARTY                                  SECOND PARTY`;
@@ -129,6 +134,7 @@ FIRST PARTY                                  SECOND PARTY`;
 - Deposit: ${depositFormatted}
 - Lock-in Period: ${formData.lockInPeriodMonths || 0} months
 - Termination Notice: ${formData.noticePeriodDays} days written notice
+- Customized Riders Included: ${selectedConfigs.length} special clauses
 - Registration Note: Stamp duty and registration requirements depend on applicable state laws.`;
 
     const clauses: ClauseAnalysis[] = [
@@ -141,7 +147,8 @@ FIRST PARTY                                  SECOND PARTY`;
         riskExplanation: 'Standard legal tenure clause.',
         recommendation: 'Attach e-Stamp paper as prescribed by local state rules.',
         saferAlternative: 'Keep tenure at 11 months with optional mutual renewal clause.',
-        citation: citations[0]
+        citation: citations[0],
+        clauseSourceType: 'statutory'
       },
       {
         id: 'cl_2',
@@ -152,9 +159,33 @@ FIRST PARTY                                  SECOND PARTY`;
         riskExplanation: 'Creates financial commitment if job or personal situation changes.',
         recommendation: 'Negotiate a shorter lock-in period (e.g. 3 months).',
         saferAlternative: 'Either party may terminate during lock-in period upon 30 days notice in case of official job transfer.',
-        citation: citations[1] || citations[0]
+        citation: citations[1] || citations[0],
+        clauseSourceType: 'statutory'
       }
     ];
+
+    // Add selected/custom clause rider analyses
+    selectedConfigs.forEach((cfg, idx) => {
+      const matchedCitation = citations.find(c =>
+        c.statuteText.toLowerCase().includes(cfg.category.toLowerCase()) ||
+        c.actShortTitle.toLowerCase().includes(cfg.category.toLowerCase())
+      ) || citations[idx % citations.length];
+
+      clauses.push({
+        id: `custom_rider_${idx + 1}`,
+        clauseTitle: `${cfg.title} (${cfg.category})`,
+        legaleseText: cfg.clauseText,
+        plainLanguageText: `Customized Rider: ${cfg.clauseText}`,
+        riskLevel: cfg.isCustom ? 'medium' : 'low',
+        riskExplanation: cfg.isCustom
+          ? 'User-customized clause rider added to contract.'
+          : `Standard ${cfg.category} rider integrated with custom parameters.`,
+        recommendation: 'Ensure both parties initial this clause on final physical execution.',
+        saferAlternative: cfg.isCustom ? undefined : 'Parameters tuned according to selected options.',
+        citation: matchedCitation,
+        clauseSourceType: cfg.sourceType || (cfg.isCustom ? 'user_custom' : 'recommended')
+      });
+    });
 
     const dynamicRiskScore = LegalRAGEngine.calculateDynamicRiskScore(clauses);
 
@@ -223,4 +254,51 @@ FIRST PARTY                                  SECOND PARTY`;
       simplificationScore: 90
     };
   }
+
+  /**
+   * PHASE 2 — EXISTING DOCUMENT REVIEW / LEGAL AUDIT
+   * Ephemeral document parsing, clause segmentation, RAG evidence retrieval, and risk scoring.
+   */
+  public static async reviewDocument(
+    params: { fileData?: string; fileName?: string; mimeType?: string; documentText?: string }
+  ): Promise<import('../types').DocumentReviewReport> {
+    try {
+      const response = await fetch(`${BACKEND_API_BASE}/review-document`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (_err) {
+      console.warn('Backend API unreachable for document review, executing client-side review engine');
+    }
+
+    // Client-side fallback
+    const { extractDocumentContent } = await import('./documentExtractor');
+    const { performFullDocumentReview } = await import('./documentReviewer');
+
+    const filenameStr = params.fileName || 'Uploaded_Document.txt';
+    let extractedDoc;
+
+    if (params.documentText) {
+      const textClean = params.documentText.trim();
+      extractedDoc = {
+        text: textClean,
+        pageCount: Math.ceil(textClean.length / 3000),
+        filename: filenameStr,
+        mimeType: params.mimeType || 'text/plain',
+        pages: [{ pageNumber: 1, text: textClean }]
+      };
+    } else if (params.fileData) {
+      extractedDoc = await extractDocumentContent(params.fileData, filenameStr, params.mimeType);
+    } else {
+      throw new Error('No document content or file data provided for review.');
+    }
+
+    return await performFullDocumentReview(extractedDoc);
+  }
 }
+
