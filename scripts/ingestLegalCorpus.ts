@@ -59,7 +59,7 @@ export interface IngestionReport {
 /**
  * Official Source Metadata Dictionary for authentic Indian Government statutory PDFs
  */
-const ACT_METADATA_MAP: Record<string, {
+export const ACT_METADATA_MAP: Record<string, {
   actName: string;
   actShortTitle: string;
   actNumber: string;

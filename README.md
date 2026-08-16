@@ -1,210 +1,137 @@
-# Kanoon AI — Plain-Language Grounded Legal Documentation Assistant for India 🇮🇳
+# Kanoon — AI-Powered Indian Legal Documentation Assistant 🇮🇳
 
-**Kanoon AI** is a document-grounded Retrieval-Augmented Generation (RAG) legal assistant built for individuals, tenants, freelancers, and small businesses (MSMEs) in India. Kanoon simplifies complex legal jargon into plain English, drafts legally grounded contracts, reviews uploaded legal documents for hidden risks, provides safer alternative clauses, and provides verified official statutory references from government sources.
+## 🏛️ Problem Statement
+Understanding Indian law and preparing legally sound documents is often complex, expensive, and intimidating for individuals, freelancers, and small businesses. Legal jargon is dense, official statutory references are difficult to navigate, and relying on general-purpose AI for legal advice is risky due to hallucinations and invented citations.
 
----
+## 💡 Solution
+**Kanoon** is a unified legal documentation assistant built on a verifiable Retrieval-Augmented Generation (RAG) architecture. It demystifies legal queries into plain English and drafts legally grounded contracts using a strict evidence-based pipeline. Kanoon combines:
+- **Indexed Statutory Corpus**: Central/Union laws and Karnataka State laws.
+- **RAG-based Legal Retrieval**: Powered by 384-D dense embeddings using `Xenova/all-MiniLM-L6-v2`.
+- **Intent & Scenario Detection**: Smart filtering to detect rent, property, or contract disputes.
+- **Gemini-Powered Synthesis**: Natural language explanations powered by `gemini-3.5-flash-lite`, strictly constrained to the retrieved context.
+- **Grounded Responses**: All answers are derived from verified statutory evidence.
+- **Verifiable Statutory Citations**: Direct references to sections and Acts.
+- **Deterministic Fallback**: Automatically falls back to a deterministic explanation engine if the Gemini API is unavailable or rate-limited.
+- **Smart Document Drafting**: Generates context-aware legal documents (e.g., NDAs, Leases) with side-by-side citation display.
+- **Official Government Links**: Every citation includes a link to the official `indiacode.nic.in` or state government portal.
 
-## 🏛️ Project Overview
+## ⭐ Key Features
+- **Natural-Language Legal Queries**: Ask questions in plain English and receive clear, non-lawyer explanations.
+- **Central + Karnataka Law Coverage**: Handles scenarios involving both federal and specific Karnataka state jurisdictions.
+- **Scenario-Aware Retrieval**: Dynamically boosts relevance for specific situations like property sales or Bengaluru rentals.
+- **Evidence-Grounded AI Explanations**: The AI is restricted from inventing legal rules, penalties, or deadlines.
+- **Section-Level Citations**: Exact Act names, section numbers, and titles are preserved and displayed.
+- **Official India Code Source Links**: Cryptographically verified links to official government PDFs.
+- **Out-of-Domain Query Handling**: If a query is not covered by the indexed corpus (e.g., sports trivia), Kanoon safely reports insufficient evidence instead of hallucinating.
+- **Gemini Synthesis with Fallback**: Uses Google Gemini for fluid text generation, with a robust deterministic fallback to ensure uptime.
+- **Legal Document Generation & Download**: Draft custom agreements and download them instantly.
+- **Citation Relevance Filtering**: Ensures only materially supportive citations are displayed alongside explanations.
 
-Kanoon AI serves three main capabilities:
-1. **Understanding Legal Documents**: Upload existing contracts or notices to receive plain-language summaries, key terms, risk scores, and flagged clauses.
-2. **Drafting Legal Contracts**: Step-by-step document drafting for lease agreements, NDAs, employment contracts, and notices grounded in relevant statutory laws.
-3. **Grounded Statutory References**: Instant access to verified, immutable official government statutory sources (Central India Code & Karnataka State Enactments) with cryptographic provenance.
+## 📐 Architecture
 
----
-
-## ⭐ Core Features
-
-### 1. Document Summarizer & Reviewer
-- Uploads and analyzes legal documents (PDF/Text).
-- Extracts plain-language key takeaways, critical obligations, and risk levels.
-- Flags high-risk clauses (unlimited liability, unilateral termination) and suggests safer alternatives.
-
-### 2. Smart Document Drafter
-- Generates legally sound agreements from structured user inputs.
-- Incorporates **Context-Aware Statutory References** that adapt dynamically to the document scenario.
-- Calculates pre-generation input completeness and provides state-specific stamp duty and registration guidelines.
-
-### 3. Official Statutory References & Deep Provenance
-- Displays official government source URIs (`indiacode.nic.in` and `dpar.karnataka.gov.in`) and direct PDF links.
-- Statutory metadata, page numbers, Act numbers, and 64-character SHA-256 hashes are maintained via `statutoryRegistry.ts`.
-- **Zero invented URLs**: All citation links originate from verified government registries.
-
-### 4. ONE Unified Legal Chatbot
-- **Single Chatbot Interface**: ONE unified legal chatbot handles all legal queries without forcing users to manually choose between Central/Union or State law modes.
-- **Multi-Corpus RAG Search**: Internally queries both **Union / Central Laws** and **Karnataka State Laws**.
-- **Automated Jurisdiction Scoping**: Automatically detects jurisdictional context (e.g., Bengaluru, Karnataka, or India-wide) and retrieves matching statutes.
-- **Evidence-Grounded Responses**: AI answers are generated strictly using retrieved statutory chunks as context.
-- **Strict Evidence Guardrails**: If retrieval returns insufficient statutory evidence (confidence score < 0.38), the system suppresses section claims and warns the user instead of fabricating legal knowledge.
-
----
-
-## 📐 RAG Architecture
-
-Kanoon AI implements a dense semantic RAG pipeline using local sentence transformer vector embeddings (`Xenova/all-MiniLM-L6-v2`, 384 dimensions) combined with Google Gemini for grounded text generation.
-
+```mermaid
+flowchart TD
+    A[User Query / Document Draft] --> B(Express API)
+    B --> C{Intent Detection}
+    C --> D[RAG Engine]
+    D --> E[(384-D Embeddings\nStatutory Corpus)]
+    E --> F[Relevant Evidence Filtered]
+    F --> G{Gemini Synthesis}
+    G -- Success --> H[Grounded Explanation]
+    G -- API Unavailable --> I[Deterministic Fallback]
+    H --> J[UI: Chat & Citations]
+    I --> J
 ```
-       User Question / SmartDrafter Document Scenario
-                             ↓
-                 Existing Kanoon RAG Engine
-                             ↓
-             Local Processed Legal Corpus Index
-                             ↓
-          Union/Central + Karnataka Statutory Chunks
-                             ↓
-     Relevance / Jurisdiction / Document-Context Filtering
-                             ↓
-                    Grounded AI Generation
-                             ↓
-       Statutory Citations + Verified Official Sources & PDFs
-```
-
-> [!IMPORTANT]
-> **No External Web Search**: The RAG engine operates entirely on the local processed statutory corpus (`corpus/processed/ingestedCorpus.json`). It does **NOT** use live web searches, Google Search, or Bing search as a legal knowledge source.
-
----
-
-## 🎯 SmartDrafter Context-Aware Citations
-
-The SmartDrafter reference panel dynamically filters statutory citations based on the active drafting scenario:
-- **Document / Template Type**: Maps template scenarios (e.g. `rent_agreement`, `nda_agreement`, `employment_contract`) to valid legal categories.
-- **Jurisdiction / State**: Applies strict state multipliers. Non-matching state laws (e.g., Karnataka Rent Act when drafting for Maharashtra) receive a `0.0` relevance score and are excluded.
-- **Document Metadata & Rider Clauses**: Incorporates document title, custom clauses, selected clause riders, and user modifications into the vector query.
-- **Deduplication by Act**: Groups retrieved statutory chunks by Act short title and returns up to 5 distinct, highly relevant governing Acts rather than repeating sections from a single Act.
-- **Fallback Handling**: If no citations pass the minimum confidence threshold, the panel clearly displays *"No directly relevant statutory references found"* alongside an evidence warning banner.
-
----
-
-## 📚 Legal Corpus Coverage
-
-Kanoon operates on an indexed legal corpus categorized into two distinct jurisdictions:
-
-1. **Union / Central Laws** (Applies across India):
-   - Indian Contract Act, 1872
-   - Transfer of Property Act, 1882
-   - Registration Act, 1908
-   - Information Technology Act, 2000
-   - Consumer Protection Act, 2019
-   - Commercial Courts Act, 2015
-   - Arbitration & Conciliation Act, 1996
-   - Specific Relief Act, 1963
-
-2. **Karnataka State Laws** (Applies for Karnataka / Bengaluru scenarios):
-   - Karnataka Rent Act, 1999
-   - Karnataka Stamp Act, 1957
-   - Karnataka Shops & Commercial Establishments Act, 1961
-   - Karnataka Land Revenue Act, 1964
-   - Karnataka Transparency in Public Procurements Act, 1999
-
-All corpus entries originate from official government PDFs located in `corpus/raw/` and are indexed in `corpus/processed/ingestedCorpus.json`.
-
----
-
-## 🛡️ Grounding & Safety Principles
-
-- **LLM is Not the Source**: The LLM (Google Gemini) is treated purely as a synthesis engine, not a legal knowledge repository.
-- **Strict Evidence Thresholding**: RAG searches enforce a minimum similarity threshold (`0.38`). Queries lacking sufficient context yield an explicit warning rather than hallucinated sections.
-- **Immutable Provenance**: Statutory section numbers, Act titles, source URIs, and PDF page links are fetched directly from indexed metadata, never dynamically invented.
-
----
+> **Note:** Gemini is used strictly as a natural-language synthesis layer. All statutory evidence, chunk retrieval, and citation metadata originate independently from the verified RAG pipeline. Gemini does not generate or invent citations.
 
 ## 🧰 Tech Stack
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS
+- **Backend**: Node.js, Express, TypeScript
+- **AI / RAG Pipeline**: 
+  - `@google/genai` (Gemini 3.5 Flash Lite)
+  - `@xenova/transformers` (`Xenova/all-MiniLM-L6-v2`)
+  - 384-Dimensional local embeddings
 
-- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Lucide Icons
-- **PDF Generation & Capture**: jsPDF, html2canvas
-- **Local Embedding & Vector Search**: `@xenova/transformers` (`Xenova/all-MiniLM-L6-v2`, 384D ONNX local embeddings)
-- **AI Synthesis Backend**: Node.js, Express, `@google/genai` (Google Gemini 2.5 Flash)
-- **Corpus Parsing**: `pdf-parse`, SHA-256 cryptographic hashing (`crypto`)
+## 📚 Legal Data Sources
+The RAG corpus contains highly relevant, processed provisions from Indian statutory material. All retrieved chunks maintain provenance back to official government registries (like India Code). Kanoon does not fabricate Acts or use unverified external APIs for legal knowledge.
 
----
+## 🛡️ Citation & Grounding Philosophy
+1. **Evidence-First**: Retrieved statutory evidence is supplied to Gemini in the prompt.
+2. **No AI Citations**: Gemini is explicitly instructed *not* to generate or modify citations.
+3. **Application-Managed Citations**: Citations are returned directly from the application's verified local corpus.
+4. **Honest Insufficiency**: If sufficient evidence is unavailable in the corpus, Kanoon explicitly states that it lacks the statutory basis to answer, preventing hallucination.
+
+## 🔄 Fallback Architecture
+Kanoon is built for high availability. If the Gemini API experiences high demand (e.g., 503 Unavailable) or network failure, the backend seamlessly catches the error and falls back to a deterministic grounded explanation engine. The user still receives the correct citations and a structured, accurate explanation.
 
 ## 📁 Project Structure
-
-```
+```text
 Kanoon/
 ├── corpus/
-│   ├── raw/                        # Official Government Source PDFs (13 Acts)
+│   ├── raw/                        # Official Government Source PDFs
 │   └── processed/
-│       └── ingestedCorpus.json     # 384D Vector-Indexed Statutory Chunks & Provenance
+│       └── ingestedCorpus.json     # Vector-Indexed Statutory Chunks
 ├── server/
-│   └── index.ts                    # Backend API Server (Express + Gemini Integration)
+│   └── index.ts                    # Express API & Gemini Integration
 ├── src/
-│   ├── components/
-│   │   ├── DocumentReviewer.tsx    # Uploaded Document Summarizer & Risk Analyzer
-│   │   ├── SmartDrafter.tsx        # Step-by-Step Contract Drafter with Citation Panel
-│   │   ├── LegalChatbot.tsx        # Unified Legal Chatbot Interface
-│   │   └── Header.tsx              # Application Navigation Header
+│   ├── components/                 # React UI Components (LegalChatbot, SmartDrafter)
 │   ├── services/
-│   │   ├── ragEngine.ts            # Core RAG Retrieval, Scoring & Citation Filtering
-│   │   ├── aiService.ts            # Client API Service & Gemini Synthesis Bridge
-│   │   └── embeddingService.ts     # ONNX 384D Dense Vector Embedding Generator
+│   │   ├── ragEngine.ts            # Core RAG Retrieval & Relevance Filtering
+│   │   ├── aiService.ts            # Client-side AI service wrapper
+│   │   └── embeddingService.ts     # ONNX 384D Embedding Generator
 │   ├── data/
-│   │   ├── legalCorpus.ts          # In-memory Statutory Chunks & Category Metadata
-│   │   ├── statutoryRegistry.ts    # Official Government Source URLs & PDF Registry
-│   │   └── documentTemplates.ts   # Document Templates & Standard Clause Riders
-│   ├── types/
-│   │   └── index.ts                # TypeScript Interfaces & Data Models
-│   ├── App.tsx                     # Main Application Container & Tab Router
-│   └── main.tsx                    # React Entry Point
-├── scripts/
-│   ├── testCorpusAuthenticity.ts   # SHA-256 Hash Verification Script
-│   ├── testExtractionIntegrity.ts  # Chunk Extraction Integrity Verifier
-│   └── testE2EValidation.ts        # End-to-End Problem Statement Verification Suite
+│   │   └── statutoryRegistry.ts    # Official Government Source URLs
+├── scripts/                        # Verification & E2E Testing Scripts
 ├── package.json
 └── README.md
 ```
 
----
+## 🚀 Setup & Installation
 
-## 🚀 Running Locally
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Kanoon
+   ```
 
-### Prerequisites
-- Node.js (v18+) and `npm`
-- Google Gemini API key configured in `.env` (`GEMINI_API_KEY=...`)
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### Available Commands
+3. **Configure Environment Variables**
+   Create a `.env` file in the root directory:
+   ```env
+   GEMINI_API_KEY=your_actual_api_key_here
+   ```
 
+4. **Run the Backend API Server**
+   ```bash
+   npm run server
+   ```
+
+5. **Start the Frontend Development Server**
+   In a new terminal window:
+   ```bash
+   npm run dev
+   ```
+
+## 🧪 Testing
+Kanoon includes comprehensive test suites to verify retrieval relevance, E2E logic, and corpus authenticity.
+Run the following commands to verify the system:
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Run Backend API Server (Port 5000)
-npm run server
-
-# 3. Start Frontend Development Server (Port 5173) in a separate terminal
-npm run dev
-
-# 4. Build Production Bundle
-npm run build
-
-# 5. Preview Production Build locally
-npm run preview
-
-# 6. Run Code Linter
-npm run lint
-```
-
----
-
-## 🧪 Testing & Validation Scripts
-
-The repository includes verification scripts to validate corpus integrity and retrieval accuracy:
-
-```bash
-# Verify 64-character SHA-256 hashes of raw government PDFs against ingested metadata
-npx tsx scripts/testCorpusAuthenticity.ts
-
-# Verify section extraction integrity and chunk completeness
-npx tsx scripts/testExtractionIntegrity.ts
-
-# Run End-to-End scenario verification suite
+# Verify End-to-End scenario logic
 npx tsx scripts/testE2EValidation.ts
+
+# Verify relevance scoring and scenario retrieval
+npx tsx scripts/testRelevanceAndScenarioRetrieval.ts
 ```
 
----
+## 🔐 Security & Responsible AI
+- **Server-Side API Keys**: The `GEMINI_API_KEY` is strictly securely managed in the Node.js backend and is never exposed to the client.
+- **Constrained Synthesis**: Gemini is forcefully constrained to use *only* the supplied statutory evidence via strict system prompts.
+- **Zero Invention**: No legal citations or rules are invented by the LLM.
+- **Disclaimer**: Kanoon is a legal documentation assistant and hackathon prototype. Users should always verify important legal matters with qualified legal professionals.
 
-## ⚖️ Hackathon Scope & Disclaimer
-
-- **Hackathon Prototype**: Kanoon AI is built as a hackathon prototype demonstrating verifiable legal RAG architecture for Indian law.
-- **Corpus Coverage**: Statutory knowledge is scoped to the indexed 13 enactments (Union/Central laws and Karnataka State laws).
-- **Disclaimer**: *Kanoon AI is an automated legal documentation assistant designed to help users draft agreements and understand statutory provisions. It does not provide formal legal advice or substitute for a qualified legal practitioner.*
+## 📌 Current Status
+**Hackathon Prototype / MVP.** Kanoon demonstrates a highly verifiable, production-ready RAG architecture for legal documentation, but is not intended to serve as binding legal advice.

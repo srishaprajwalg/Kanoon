@@ -24,6 +24,13 @@ const QUICK_PROMPTS = [
   "When is registration mandatory under Section 17 of the Registration Act 1908?"
 ];
 
+const formatMatchScore = (citation: LegalStatuteCitation): number => {
+  const scoreRaw = citation.confidenceScore ?? citation.similarityScore ?? citation.matchScore ?? 0;
+  let percent = scoreRaw > 1 ? scoreRaw : scoreRaw * 100;
+  percent = Math.min(100, Math.max(0, percent));
+  return Math.round(percent);
+};
+
 export const LegalChatbot: React.FC<LegalChatbotProps> = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -35,6 +42,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = () => {
   ]);
   const [inputQuery, setInputQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [expandedStatuteIds, setExpandedStatuteIds] = useState<Record<string, boolean>>({});
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,16 +75,33 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = () => {
     setIsProcessing(true);
 
     try {
-      // 1. Retrieve grounded legal statutory citations via RAG Engine across Central & Karnataka corpora
-      const citations = await LegalRAGEngine.retrieveRelevantStatutesAsync(textToSend, undefined, 4, 0.4);
+      // 1. Retrieve grounded legal statutory citations & evidence-grounded LLM synthesis via /api/chat-explain
+      let citations: LegalStatuteCitation[] = [];
+      let explanation = '';
 
-      // 2. Generate grounded, zero-hallucination statutory response
-      const botResponseText = generateGroundedStatutoryResponse(textToSend, citations);
+      try {
+        const resp = await fetch('http://localhost:5000/api/chat-explain', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ queryText: textToSend })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          citations = data.citations || [];
+          explanation = data.explanation || '';
+        } else {
+          citations = await LegalRAGEngine.retrieveRelevantStatutesAsync(textToSend, undefined, 4, 0.4);
+          explanation = LegalRAGEngine.generateGroundedExplanation(textToSend, citations);
+        }
+      } catch (_err) {
+        citations = await LegalRAGEngine.retrieveRelevantStatutesAsync(textToSend, undefined, 4, 0.4);
+        explanation = LegalRAGEngine.generateGroundedExplanation(textToSend, citations);
+      }
 
       setMessages(prev => prev.map(msg => 
         msg.id === botLoadingId ? {
           ...msg,
-          text: botResponseText,
+          text: explanation,
           citations: citations,
           isLoading: false
         } : msg
@@ -93,42 +118,6 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = () => {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const generateGroundedStatutoryResponse = (query: string, citations: LegalStatuteCitation[]): string => {
-    if (!citations || citations.length === 0) {
-      return `No verified statutory provision found in Kanoon legal database matching "${query}". Please verify the Act or section details under Indian Central and Karnataka State Law.`;
-    }
-
-    const topCitation = citations[0];
-    const isKarnataka = topCitation.jurisdiction === 'KARNATAKA' || query.toLowerCase().includes('bengaluru') || query.toLowerCase().includes('karnataka');
-    const jurisdictionLabel = isKarnataka ? 'Karnataka State Law' : 'Central (Union) Law';
-    
-    let summaryText = `Based on verified statutory records under **${jurisdictionLabel}**:\n\n`;
-    summaryText += `📌 **Primary Statutory Provision:**\n`;
-    summaryText += `• **Act Title:** ${topCitation.actName}\n`;
-    summaryText += `• **Section / Provision:** ${topCitation.sectionNumber} — *${topCitation.sectionTitle}*\n`;
-    summaryText += `• **Statutory Content:** ${topCitation.statuteText}\n\n`;
-
-    summaryText += `⚖️ **Legal Synthesis & Application:**\n`;
-    if (topCitation.actShortTitle.toLowerCase().includes('stamp') || query.toLowerCase().includes('stamp')) {
-      summaryText += `Under Article 30 of the Karnataka Stamp Act, 1957, lease and rental agreements executed in Bengaluru attract compulsory e-stamp duty based on consideration and tenure.\n\n`;
-    } else if (topCitation.actShortTitle.toLowerCase().includes('rent') || query.toLowerCase().includes('rent')) {
-      summaryText += `Under Section 4 and Section 22 of the Karnataka Rent Act, 1999, residential tenancy agreements are subject to statutory registration and eviction safeguards before the Rent Controller.\n\n`;
-    } else if (topCitation.actShortTitle.toLowerCase().includes('contract') || query.toLowerCase().includes('contract')) {
-      summaryText += `Under Section 10, Section 27, and Section 73 of the Indian Contract Act, 1872, agreements must meet essential validity criteria. Restraints of trade are void, and unliquidated damages require proof of loss.\n\n`;
-    } else {
-      summaryText += `This provision applies directly to statutory compliance, rights, and duties enforceable under ${topCitation.actShortTitle}.\n\n`;
-    }
-
-    if (citations.length > 1) {
-      summaryText += `🔍 **Additional Relevant Citations:**\n`;
-      citations.slice(1).forEach((c, idx) => {
-        summaryText += `${idx + 1}. **${c.actShortTitle}** ${c.sectionNumber}: *${c.sectionTitle}* (${c.jurisdiction || 'CENTRAL'})\n`;
-      });
-    }
-
-    return summaryText;
   };
 
   return (
@@ -192,41 +181,63 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                      {msg.citations.map((citation, idx) => (
-                        <div key={idx} className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/30 transition-all text-xs">
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
-                              citation.jurisdiction === 'KARNATAKA' 
-                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                            }`}>
-                              {citation.jurisdiction || 'CENTRAL'}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-mono">
-                              Match Score: {Math.round((citation.matchScore || 0) * 100)}%
-                            </span>
-                          </div>
-                          
-                          <div className="font-semibold text-slate-200 truncate">
-                            {citation.actShortTitle} {citation.sectionNumber}
-                          </div>
-                          <div className="text-[11px] text-slate-400 truncate">
-                            {citation.sectionTitle}
-                          </div>
+                      {msg.citations.map((citation, idx) => {
+                        const citKey = citation.id || `cit_${idx}`;
+                        const isExpanded = !!expandedStatuteIds[citKey];
+                        return (
+                          <div key={citKey} className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/30 transition-all text-xs">
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
+                                citation.jurisdiction === 'KARNATAKA' 
+                                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                              }`}>
+                                {citation.jurisdiction || 'CENTRAL'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                Match Score: {formatMatchScore(citation)}%
+                              </span>
+                            </div>
+                            
+                            <div className="font-semibold text-slate-200 truncate">
+                              {citation.actShortTitle} {citation.sectionNumber}
+                            </div>
+                            <div className="text-[11px] text-slate-400 truncate mb-2">
+                              {citation.sectionTitle}
+                            </div>
 
-                          {citation.sourceUrl && (
-                            <a
-                              href={citation.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-2 inline-flex items-center text-[10px] text-amber-400 hover:text-amber-300 transition-colors font-medium"
-                            >
-                              <span>View Official Source</span>
-                              <ExternalLink className="w-2.5 h-2.5 ml-1" />
-                            </a>
-                          )}
-                        </div>
-                      ))}
+                            <div className="flex items-center space-x-2 pt-1 border-t border-slate-800/60">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedStatuteIds(prev => ({ ...prev, [citKey]: !prev[citKey] }))}
+                                className="inline-flex items-center text-[10px] text-amber-400 hover:text-amber-300 transition-colors font-medium"
+                              >
+                                <BookOpen className="w-2.5 h-2.5 mr-1" />
+                                <span>{isExpanded ? 'Hide Statutory Text' : 'View Statutory Text'}</span>
+                              </button>
+
+                              {citation.sourceUrl && (
+                                <a
+                                  href={citation.sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center text-[10px] text-amber-400 hover:text-amber-300 transition-colors font-medium ml-auto"
+                                >
+                                  <span>View Official Source</span>
+                                  <ExternalLink className="w-2.5 h-2.5 ml-1" />
+                                </a>
+                              )}
+                            </div>
+
+                            {isExpanded && (
+                              <div className="mt-2 p-2.5 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] text-slate-300 font-mono leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
+                                <div className="text-[9px] text-amber-400 font-sans uppercase tracking-wider mb-1 font-bold">Verbatim Statutory Text:</div>
+                                {citation.statuteText}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

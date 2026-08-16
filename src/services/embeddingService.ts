@@ -116,6 +116,10 @@ export function calculateCosineSimilarity(vecA: number[], vecB: number[]): numbe
   return Math.max(0, Math.min(1.0, score));
 }
 
+function isValid384DVector(vec?: number[]): vec is number[] {
+  return Array.isArray(vec) && vec.length === 384 && vec.every(Number.isFinite);
+}
+
 /**
  * Pre-calculates and caches 384D dense embeddings for all statutory items in legal corpus at startup
  */
@@ -124,6 +128,10 @@ export async function precalculateCorpusEmbeddings(): Promise<{ count: number; d
   let count = 0;
 
   for (const item of INDIAN_LEGAL_CORPUS) {
+    if (isValid384DVector(item.embeddingVector)) {
+      corpusEmbeddingCache.set(item.id, item.embeddingVector);
+      continue;
+    }
     if (!corpusEmbeddingCache.has(item.id)) {
       const textToEmbed = `${item.actName} ${item.sectionNumber} ${item.sectionTitle} ${item.statuteText} ${item.keywords.join(' ')}`;
       const res = await generateDenseEmbedding(textToEmbed);
@@ -141,15 +149,19 @@ export async function precalculateCorpusEmbeddings(): Promise<{ count: number; d
  * Retrieves pre-calculated 384D dense embedding vector for a corpus item
  */
 export function getCorpusEmbedding(item: CorpusItem): number[] {
-  if (corpusEmbeddingCache.has(item.id)) {
-    return corpusEmbeddingCache.get(item.id)!;
-  }
-  if (item.embeddingVector && item.embeddingVector.length === 384) {
+  if (isValid384DVector(item.embeddingVector)) {
     corpusEmbeddingCache.set(item.id, item.embeddingVector);
     return item.embeddingVector;
   }
-  
-  // Deterministic fallback if not yet precalculated
+
+  if (corpusEmbeddingCache.has(item.id)) {
+    const cached = corpusEmbeddingCache.get(item.id)!;
+    if (isValid384DVector(cached)) {
+      return cached;
+    }
+  }
+
+  // Deterministic fallback if not yet precalculated or missing valid vector
   const textToEmbed = `${item.actName} ${item.sectionNumber} ${item.sectionTitle} ${item.statuteText} ${item.keywords.join(' ')}`;
   const vec = create384DVector(textToEmbed);
   corpusEmbeddingCache.set(item.id, vec);

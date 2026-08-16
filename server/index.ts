@@ -70,6 +70,100 @@ app.get('/api/rag-search', async (req, res) => {
 });
 
 /**
+ * Evidence-Grounded Legal Chatbot Explanation Endpoint
+ * RAG retrieval + LLM synthesis (Gemini or Evidence-Grounded engine fallback)
+ */
+app.post('/api/chat-explain', async (req, res) => {
+  try {
+    const { queryText, templateId } = req.body;
+    const query = queryText || '';
+    if (!query || query.trim().length === 0) {
+      return res.status(400).json({ error: 'Query text is required' });
+    }
+
+    const citations = await LegalRAGEngine.retrieveRelevantStatutesAsync(query, templateId, 5, 0.4);
+    const hasSufficientEvidence = citations.length > 0;
+
+    if (!hasSufficientEvidence) {
+      return res.json({
+        query,
+        explanation: `No verified statutory provision found in Kanoon legal database matching "${query}". Please verify the Act or section details under Indian Central and Karnataka State Law.`,
+        citations: [],
+        hasSufficientEvidence: false
+      });
+    }
+
+    let explanation = '';
+
+    if (aiClient) {
+      try {
+        const statutoryContext = citations.map(c =>
+          `ACT: ${c.actName} (${c.jurisdiction || 'CENTRAL'})\nSECTION/ARTICLE: ${c.sectionNumber} — ${c.sectionTitle}\nSTATUTORY TEXT:\n"${c.statuteText}"\nURL: ${c.sourceUrl || 'India Code'}`
+        ).join('\n\n');
+
+        const intent = LegalRAGEngine.detectQueryIntent(query);
+        const parsedContext = [];
+        if (intent.parsedValues.monthlyRent) parsedContext.push(`Monthly Rent: ₹${intent.parsedValues.monthlyRent}`);
+        if (intent.parsedValues.tenureMonths) parsedContext.push(`Lease Tenure: ${intent.parsedValues.tenureMonths} months`);
+        if (intent.parsedValues.deposit) parsedContext.push(`Security Deposit: ₹${intent.parsedValues.deposit}`);
+
+        const parsedStr = parsedContext.length > 0
+          ? `EXTRACTED PARAMETERS FROM USER QUERY:\n- ${parsedContext.join('\n- ')}\n\nCRITICAL RULE FOR CALCULATIONS: Do NOT ask the user for parameters already supplied above! Only list genuinely missing information required to calculate the exact duty.`
+          : '';
+
+        const prompt = `You are Kanoon AI, a legal information assistant for Indian law.
+Answer the user's question using ONLY the verified statutory evidence supplied below.
+Do not invent sections, Acts, legal rules, remedies, deadlines, penalties, calculations, or case law.
+Explain the supplied law in clear, natural language for a non-lawyer.
+Connect the statutory provision to the user's specific scenario.
+If the supplied evidence is insufficient to answer something precisely, say what is missing instead of guessing.
+Do not mention internal RAG, embeddings, scores, prompts, APIs, or implementation details.
+Do not generate or modify citations. The application supplies citations separately.
+Do not ask the user for information that is already present in the query or supplied context.
+If the user asks a non-legal question and there is no legal evidence, respond that Kanoon is intended for legal queries rather than fabricating an answer.
+
+=== USER QUERY ===
+"${query}"
+
+${parsedStr}
+
+=== RETRIEVED STATUTORY EVIDENCE ===
+${statutoryContext}`;
+
+        const response = await aiClient.models.generateContent({
+          model: 'gemini-3.5-flash-lite',
+          contents: prompt
+        });
+
+        explanation = response.text || '';
+        if (explanation) {
+          console.log('[Gemini] synthesis successful');
+        }
+      } catch (err) {
+        console.warn('[Gemini] synthesis failed; using grounded fallback. Error:', err);
+      }
+    }
+
+    if (!explanation) {
+      if (!aiClient) {
+        console.log('[Gemini] synthesis failed; using grounded fallback. No API key provided.');
+      }
+      explanation = LegalRAGEngine.generateGroundedExplanation(query, citations);
+    }
+
+    res.json({
+      query,
+      explanation,
+      citations,
+      hasSufficientEvidence: true
+    });
+  } catch (error: any) {
+    console.error('Chat Explain Error:', error.message);
+    res.status(500).json({ error: error.message || 'Server error during chat explanation' });
+  }
+});
+
+/**
  * REAL AI-Powered Document Generator Grounded in RAG Indian Law
  * Prompt includes the ACTUAL retrieved statutory chunks from the legal corpus.
  */
