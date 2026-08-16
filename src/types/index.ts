@@ -67,6 +67,8 @@ export interface LegalStatuteCitation {
   whyThisClause?: string; // Metadata-derived retrieval rationale
   sourceTier?: string; // e.g. Tier 1 (Official Government), Tier 2 (Official Gazette)
   sourceDocument?: string;
+  pageNumbers?: number[];
+  sha256?: string;
 }
 
 export interface ClauseAnalysis {
@@ -98,6 +100,7 @@ export interface GeneratedDocument {
   legalActReferences: string[];
   citations: LegalStatuteCitation[];
   validationWarnings: MissingFieldWarning[];
+  recommendations?: string[];
   disclaimer: string;
   hasSufficientEvidence?: boolean;
   evidenceWarning?: string;
