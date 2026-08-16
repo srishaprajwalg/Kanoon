@@ -76,6 +76,18 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('chatbot')}
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'chatbot'
+                  ? 'bg-amber-500 text-slate-950 font-semibold shadow-md shadow-amber-500/20'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Scale className="w-4 h-4" />
+              <span>Legal Chatbot</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('database')}
               className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'database'

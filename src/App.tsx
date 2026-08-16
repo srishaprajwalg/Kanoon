@@ -3,6 +3,7 @@ import type { ActiveTab, GeneratedDocument } from './types';
 import { Header } from './components/Header';
 import { SmartDrafter } from './components/SmartDrafter';
 import { JargonSimplifier } from './components/JargonSimplifier';
+import { LegalChatbot } from './components/LegalChatbot';
 import { LegalDatabase } from './components/LegalDatabase';
 import { ExpertHub } from './components/ExpertHub';
 import { PresentationView } from './components/PresentationView';
@@ -52,6 +53,10 @@ export function App() {
 
         {activeTab === 'simplifier' && (
           <JargonSimplifier apiKey={apiKey} />
+        )}
+
+        {activeTab === 'chatbot' && (
+          <LegalChatbot apiKey={apiKey} />
         )}
 
         {activeTab === 'database' && (

@@ -945,7 +945,12 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                 )}
 
                 <div className="space-y-2.5">
-                  {generatedDoc.citations.map((cit, idx) => (
+                  {(!generatedDoc.citations || generatedDoc.citations.length === 0) ? (
+                    <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center text-xs text-slate-400">
+                      No directly relevant statutory references found
+                    </div>
+                  ) : (
+                    generatedDoc.citations.map((cit, idx) => (
                     <div key={idx} className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 text-xs">
                       <div className="flex items-center justify-between font-bold text-slate-200">
                         <span className="text-amber-400 flex items-center space-x-1">
@@ -1026,7 +1031,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )))}
                 </div>
               </div>
 

@@ -78,53 +78,104 @@ export class LegalRAGEngine {
       if (allowedCategories.length > 0) {
         if (allowedCategories.includes(item.applicabilityCategory)) {
           categoryMultiplier = 1.35;
-        } else if (item.applicabilityCategory === 'dispute_arbitration' && qLower.includes('arbitr')) {
+        } else if (item.applicabilityCategory === 'dispute_arbitration' && allowedCategories.includes('dispute_arbitration') && qLower.includes('arbitr')) {
           categoryMultiplier = 1.2;
-        } else if (item.applicabilityCategory !== 'general_contract') {
-          categoryMultiplier = 0.05;
+        } else {
+          categoryMultiplier = 0.0;
         }
       }
 
       let jurisdictionMultiplier = 1.0;
-      if (rawCosine >= 0.32) {
-        if (isKarnatakaQuery) {
-          if (item.jurisdiction === 'KARNATAKA') {
-            jurisdictionMultiplier = 1.4; // State law boost for relevant legal queries
-          } else if (item.jurisdiction === 'CENTRAL') {
-            jurisdictionMultiplier = 1.0; // Central law preserved
-          } else {
-            jurisdictionMultiplier = 0.0; // Strictly exclude non-matching state laws
-          }
-        } else if (isMaharashtraQuery) {
-          if ((item as any).jurisdiction === 'MAHARASHTRA' || (item as any).stateSpecific === 'Maharashtra') {
-            jurisdictionMultiplier = 1.4;
-          } else if (item.jurisdiction === 'CENTRAL') {
-            jurisdictionMultiplier = 1.0;
-          } else {
-            jurisdictionMultiplier = 0.0;
-          }
+      if (isKarnatakaQuery) {
+        if (item.jurisdiction === 'KARNATAKA') {
+          jurisdictionMultiplier = 1.4; // State law boost for relevant legal queries
+        } else if (item.jurisdiction === 'CENTRAL') {
+          jurisdictionMultiplier = 1.0; // Central law preserved
         } else {
-          if (item.jurisdiction === 'CENTRAL') {
-            jurisdictionMultiplier = 1.0;
-          } else if (item.jurisdiction === 'KARNATAKA') {
-            jurisdictionMultiplier = 0.9;
-          }
+          jurisdictionMultiplier = 0.0; // Strictly exclude non-matching state laws
+        }
+      } else if (isMaharashtraQuery) {
+        if ((item as any).jurisdiction === 'MAHARASHTRA' || (item as any).stateSpecific === 'Maharashtra') {
+          jurisdictionMultiplier = 1.4;
+        } else if (item.jurisdiction === 'CENTRAL') {
+          jurisdictionMultiplier = 1.0;
+        } else {
+          jurisdictionMultiplier = 0.0;
         }
       } else {
-        if (isKarnatakaQuery && item.jurisdiction !== 'KARNATAKA' && item.jurisdiction !== 'CENTRAL') {
-          jurisdictionMultiplier = 0.0;
+        if (item.jurisdiction === 'CENTRAL') {
+          jurisdictionMultiplier = 1.0;
+        } else if (item.jurisdiction === 'KARNATAKA') {
+          jurisdictionMultiplier = 0.0; // Strictly exclude Karnataka state laws when query state is not Karnataka
         }
       }
 
-      const finalScore = Math.min(1.0, Math.round((rawCosine * categoryMultiplier * jurisdictionMultiplier) * 100) / 100);
-      return { item, rawCosine, finalScore };
+      // 3. Act Title & Statutory Keyword Boost
+      let actKeywordMultiplier = 1.0;
+      const actShortLower = item.actShortTitle.toLowerCase();
+      const actNameLower = item.actName.toLowerCase();
+      const cleanActShort = actShortLower.replace(/\d{4}/g, '').replace(/,/g, '').replace(/^the\s+/, '').trim();
+      const cleanActName = actNameLower.replace(/\d{4}/g, '').replace(/,/g, '').replace(/^the\s+/, '').trim();
+      const isActExplicitlyMentioned = cleanActShort.length > 3 && (qLower.includes(cleanActShort) || qLower.includes(cleanActName));
+
+      if (isActExplicitlyMentioned) {
+        if (categoryMultiplier < 1.0) categoryMultiplier = 1.0;
+        actKeywordMultiplier *= 2.5;
+      } else {
+        const actWords = cleanActShort.split(/\s+/).filter(w => w.length > 2 && w !== 'act');
+        if (actWords.length >= 2 && actWords.every(w => qLower.includes(w))) {
+          if (categoryMultiplier < 1.0) categoryMultiplier = 1.0;
+          actKeywordMultiplier *= 2.0;
+        }
+      }
+
+      const secNumLower = item.sectionNumber ? item.sectionNumber.toLowerCase() : '';
+      if (secNumLower && (qLower.includes(`section ${secNumLower}`) || qLower.includes(`article ${secNumLower}`) || qLower.includes(`sec ${secNumLower}`))) {
+        actKeywordMultiplier *= 3.0;
+      }
+      if ((qLower.includes('rent') || qLower.includes('tenancy') || qLower.includes('eviction')) && (actShortLower.includes('rent') || item.applicabilityCategory === 'lease_tenancy')) {
+        actKeywordMultiplier *= 1.8;
+      }
+      if ((qLower.includes('stamp') || qLower.includes('duty')) && actShortLower.includes('stamp')) {
+        actKeywordMultiplier *= 1.8;
+      }
+      if ((qLower.includes('registr') || qLower.includes('sub-registrar')) && actShortLower.includes('registration')) {
+        actKeywordMultiplier *= 1.4;
+      }
+      if ((qLower.includes('contract') || qLower.includes('agreement')) && actShortLower.includes('contract')) {
+        actKeywordMultiplier *= 1.25;
+      }
+      if (actShortLower.includes('procurement') && !qLower.includes('procurement') && !qLower.includes('tender')) {
+        actKeywordMultiplier = 0.0;
+      }
+      if (actShortLower.includes('land revenue') && !qLower.includes('land revenue') && !qLower.includes('agricultural')) {
+        actKeywordMultiplier = 0.0;
+      }
+
+      const unclippedScore = rawCosine * categoryMultiplier * jurisdictionMultiplier * actKeywordMultiplier;
+      const finalScore = Math.min(1.0, Math.round(unclippedScore * 100) / 100);
+      return { item, rawCosine, unclippedScore, finalScore };
     });
 
-    // 3. Sort by final score descending
-    scored.sort((a, b) => b.finalScore - a.finalScore);
+    // 3. Sort by unclipped score descending to ensure exact act matches win ties
+    scored.sort((a, b) => b.unclippedScore - a.unclippedScore);
 
-    // 4. Filter by strict minimum confidence threshold
-    const qualified = scored.filter(s => s.finalScore >= minThreshold);
+    // 4. When templateId is provided (document drafting), deduplicate by distinct Act to present broad statutory coverage
+    let candidatesToSlice = scored;
+    if (templateId) {
+      const distinctActMap = new Map<string, typeof scored[0]>();
+      for (const s of scored) {
+        const actKey = s.item.actShortTitle || s.item.actName;
+        if (!distinctActMap.has(actKey) || distinctActMap.get(actKey)!.unclippedScore < s.unclippedScore) {
+          distinctActMap.set(actKey, s);
+        }
+      }
+      candidatesToSlice = Array.from(distinctActMap.values());
+      candidatesToSlice.sort((a, b) => b.unclippedScore - a.unclippedScore);
+    }
+
+    // 5. Filter by strict minimum confidence threshold
+    const qualified = candidatesToSlice.filter(s => s.finalScore >= minThreshold);
     const topMatches = qualified.slice(0, topK);
 
     return topMatches.map(({ item, finalScore }) => {
@@ -189,50 +240,100 @@ export class LegalRAGEngine {
       if (allowedCategories.length > 0) {
         if (allowedCategories.includes(item.applicabilityCategory)) {
           categoryMultiplier = 1.35;
-        } else if (item.applicabilityCategory === 'dispute_arbitration' && qLower.includes('arbitr')) {
+        } else if (item.applicabilityCategory === 'dispute_arbitration' && allowedCategories.includes('dispute_arbitration') && qLower.includes('arbitr')) {
           categoryMultiplier = 1.2;
-        } else if (item.applicabilityCategory !== 'general_contract') {
-          categoryMultiplier = 0.05;
+        } else {
+          categoryMultiplier = 0.0;
         }
       }
 
       let jurisdictionMultiplier = 1.0;
-      if (rawCosine >= 0.28) {
-        if (isKarnatakaQuery) {
-          if (item.jurisdiction === 'KARNATAKA') {
-            jurisdictionMultiplier = 1.4;
-          } else if (item.jurisdiction === 'CENTRAL') {
-            jurisdictionMultiplier = 1.0;
-          } else {
-            jurisdictionMultiplier = 0.0;
-          }
-        } else if (isMaharashtraQuery) {
-          if ((item as any).jurisdiction === 'MAHARASHTRA' || (item as any).stateSpecific === 'Maharashtra') {
-            jurisdictionMultiplier = 1.4;
-          } else if (item.jurisdiction === 'CENTRAL') {
-            jurisdictionMultiplier = 1.0;
-          } else {
-            jurisdictionMultiplier = 0.0;
-          }
+      if (isKarnatakaQuery) {
+        if (item.jurisdiction === 'KARNATAKA') {
+          jurisdictionMultiplier = 1.4;
+        } else if (item.jurisdiction === 'CENTRAL') {
+          jurisdictionMultiplier = 1.0;
         } else {
-          if (item.jurisdiction === 'CENTRAL') {
-            jurisdictionMultiplier = 1.0;
-          } else if (item.jurisdiction === 'KARNATAKA') {
-            jurisdictionMultiplier = 0.9;
-          }
+          jurisdictionMultiplier = 0.0;
+        }
+      } else if (isMaharashtraQuery) {
+        if ((item as any).jurisdiction === 'MAHARASHTRA' || (item as any).stateSpecific === 'Maharashtra') {
+          jurisdictionMultiplier = 1.4;
+        } else if (item.jurisdiction === 'CENTRAL') {
+          jurisdictionMultiplier = 1.0;
+        } else {
+          jurisdictionMultiplier = 0.0;
         }
       } else {
-        if (isKarnatakaQuery && item.jurisdiction !== 'KARNATAKA' && item.jurisdiction !== 'CENTRAL') {
+        if (item.jurisdiction === 'CENTRAL') {
+          jurisdictionMultiplier = 1.0;
+        } else if (item.jurisdiction === 'KARNATAKA') {
           jurisdictionMultiplier = 0.0;
         }
       }
 
-      const finalScore = Math.min(1.0, Math.round((rawCosine * categoryMultiplier * jurisdictionMultiplier) * 100) / 100);
-      return { item, finalScore };
+      let actKeywordMultiplier = 1.0;
+      const actShortLower = item.actShortTitle.toLowerCase();
+      const actNameLower = item.actName.toLowerCase();
+      const cleanActShort = actShortLower.replace(/\d{4}/g, '').replace(/,/g, '').replace(/^the\s+/, '').trim();
+      const cleanActName = actNameLower.replace(/\d{4}/g, '').replace(/,/g, '').replace(/^the\s+/, '').trim();
+      const isActExplicitlyMentioned = cleanActShort.length > 3 && (qLower.includes(cleanActShort) || qLower.includes(cleanActName));
+
+      if (isActExplicitlyMentioned) {
+        if (categoryMultiplier < 1.0) categoryMultiplier = 1.0;
+        actKeywordMultiplier *= 2.5;
+      } else {
+        const actWords = cleanActShort.split(/\s+/).filter(w => w.length > 2 && w !== 'act');
+        if (actWords.length >= 2 && actWords.every(w => qLower.includes(w))) {
+          if (categoryMultiplier < 1.0) categoryMultiplier = 1.0;
+          actKeywordMultiplier *= 2.0;
+        }
+      }
+
+      const secNumLower = item.sectionNumber ? item.sectionNumber.toLowerCase() : '';
+      if (secNumLower && (qLower.includes(`section ${secNumLower}`) || qLower.includes(`article ${secNumLower}`) || qLower.includes(`sec ${secNumLower}`))) {
+        actKeywordMultiplier *= 3.0;
+      }
+      if ((qLower.includes('rent') || qLower.includes('tenancy') || qLower.includes('eviction')) && (actShortLower.includes('rent') || item.applicabilityCategory === 'lease_tenancy')) {
+        actKeywordMultiplier *= 1.8;
+      }
+      if ((qLower.includes('stamp') || qLower.includes('duty')) && actShortLower.includes('stamp')) {
+        actKeywordMultiplier *= 1.8;
+      }
+      if ((qLower.includes('registr') || qLower.includes('sub-registrar')) && actShortLower.includes('registration')) {
+        actKeywordMultiplier *= 1.4;
+      }
+      if ((qLower.includes('contract') || qLower.includes('agreement')) && actShortLower.includes('contract')) {
+        actKeywordMultiplier *= 1.25;
+      }
+      if (actShortLower.includes('procurement') && !qLower.includes('procurement') && !qLower.includes('tender')) {
+        actKeywordMultiplier = 0.0;
+      }
+      if (actShortLower.includes('land revenue') && !qLower.includes('land revenue') && !qLower.includes('agricultural')) {
+        actKeywordMultiplier = 0.0;
+      }
+
+      const unclippedScore = rawCosine * categoryMultiplier * jurisdictionMultiplier * actKeywordMultiplier;
+      const finalScore = Math.min(1.0, Math.round(unclippedScore * 100) / 100);
+      return { item, unclippedScore, finalScore };
     });
 
-    scored.sort((a, b) => b.finalScore - a.finalScore);
-    const qualified = scored.filter(s => s.finalScore >= minThreshold);
+    scored.sort((a, b) => b.unclippedScore - a.unclippedScore);
+
+    let candidatesToSlice = scored;
+    if (templateId) {
+      const distinctActMap = new Map<string, typeof scored[0]>();
+      for (const s of scored) {
+        const actKey = s.item.actShortTitle || s.item.actName;
+        if (!distinctActMap.has(actKey) || distinctActMap.get(actKey)!.unclippedScore < s.unclippedScore) {
+          distinctActMap.set(actKey, s);
+        }
+      }
+      candidatesToSlice = Array.from(distinctActMap.values());
+      candidatesToSlice.sort((a, b) => b.unclippedScore - a.unclippedScore);
+    }
+
+    const qualified = candidatesToSlice.filter(s => s.finalScore >= minThreshold);
     const topMatches = qualified.slice(0, topK);
 
     return topMatches.map(({ item, finalScore }) => {
@@ -273,12 +374,40 @@ export class LegalRAGEngine {
   }
 
   /**
+   * Domain query keywords map by document template ID
+   */
+  private static getTemplateKeywords(templateId: string): string {
+    switch (templateId) {
+      case 'rent_agreement':
+        return 'rent tenancy lease stamp duty registration sub-registrar property transfer eviction landlord tenant';
+      case 'nda_agreement':
+        return 'non-disclosure confidentiality proprietary information trade secret IT act contract disclosure';
+      case 'employment_contract':
+        return 'employment service shops establishments worker employee contract salary termination';
+      case 'freelance_service':
+      case 'freelance_contract':
+      case 'service_agreement':
+        return 'service contract freelance employment IT act agreement compensation';
+      case 'partnership_deed':
+        return 'partnership deed contract dispute arbitration firm partner';
+      case 'consumer_legal_notice':
+      case 'legal_notice':
+        return 'consumer rights protection legal notice dispute arbitration contract compensation';
+      default:
+        return 'contract agreement legal clause';
+    }
+  }
+
+  /**
    * Retrieves relevant legal citations based on full document metadata & customized clause riders.
    */
   public static retrieveCitationsForDocument(formData: DocumentFormData): LegalStatuteCitation[] {
     const selectedTexts = formData.selectedClauseConfigs ? formData.selectedClauseConfigs.map(c => `${c.title} ${c.category} ${c.clauseText}`).join(' ') : '';
     const customTexts = formData.customUserClauses ? formData.customUserClauses.map(c => `${c.title} ${c.category} ${c.clauseText}`).join(' ') : '';
-    const combinedQuery = `${formData.documentTitle} ${formData.templateId} ${formData.disputeResolution} ${formData.customClauses.join(' ')} ${selectedTexts} ${customTexts} ${formData.state}`;
+    const stateName = formData.governingLawState || formData.state || 'Karnataka';
+    const domainKeywords = this.getTemplateKeywords(formData.templateId);
+    const combinedQuery = `${formData.documentTitle} ${domainKeywords} ${formData.templateId} ${formData.customClauses.join(' ')} ${selectedTexts} ${customTexts} ${stateName}`;
+    
     return this.retrieveRelevantStatutes(combinedQuery, formData.templateId, 5);
   }
 
@@ -288,7 +417,10 @@ export class LegalRAGEngine {
   public static async retrieveCitationsForDocumentAsync(formData: DocumentFormData): Promise<LegalStatuteCitation[]> {
     const selectedTexts = formData.selectedClauseConfigs ? formData.selectedClauseConfigs.map(c => `${c.title} ${c.category} ${c.clauseText}`).join(' ') : '';
     const customTexts = formData.customUserClauses ? formData.customUserClauses.map(c => `${c.title} ${c.category} ${c.clauseText}`).join(' ') : '';
-    const combinedQuery = `${formData.documentTitle} ${formData.templateId} ${formData.disputeResolution} ${formData.customClauses.join(' ')} ${selectedTexts} ${customTexts} ${formData.state}`;
+    const stateName = formData.governingLawState || formData.state || 'Karnataka';
+    const domainKeywords = this.getTemplateKeywords(formData.templateId);
+    const combinedQuery = `${formData.documentTitle} ${domainKeywords} ${formData.templateId} ${formData.customClauses.join(' ')} ${selectedTexts} ${customTexts} ${stateName}`;
+
     return this.retrieveRelevantStatutesAsync(combinedQuery, formData.templateId, 5);
   }
 

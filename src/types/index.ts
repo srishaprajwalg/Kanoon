@@ -1,4 +1,4 @@
-export type ActiveTab = 'drafter' | 'review' | 'simplifier' | 'database' | 'experts' | 'presentation';
+export type ActiveTab = 'drafter' | 'review' | 'simplifier' | 'chatbot' | 'database' | 'experts' | 'presentation';
 
 export interface LegalParty {
   name: string;
@@ -105,6 +105,7 @@ export interface LegalStatuteCitation {
   effectiveDate?: string;
   confidenceScore?: number; // 0.0 to 1.0
   similarityScore?: number; // Cosine similarity score (e.g. 0.87)
+  matchScore?: number;
   confidenceLevel?: 'High' | 'Medium' | 'Low';
   evidenceStrength?: 'Strong' | 'Moderate' | 'Weak';
   whyThisClause?: string; // Metadata-derived retrieval rationale
