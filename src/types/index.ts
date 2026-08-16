@@ -24,17 +24,46 @@ export interface DocumentFormData {
   governingLawState: string;
   disputeResolution: 'Arbitration' | 'Courts' | 'Mutual Conciliation';
   customClauses: string[];
-  additionalNotes: string;
+  additionalNotes?: string;
   usePlainLanguage: boolean;
 }
 
+export interface MissingFieldWarning {
+  fieldKey: string;
+  fieldName: string;
+  importance: 'critical' | 'recommended' | 'optional';
+  message: string;
+  suggestion: string;
+}
+
+export interface ValidationResult {
+  isComplete: boolean;
+  score: number; // 0 to 100
+  missingFields: MissingFieldWarning[];
+  recommendations: string[];
+}
+
+export interface LegalStatuteCitation {
+  id: string;
+  actName: string;
+  actShortTitle: string;
+  sectionNumber: string;
+  sectionTitle: string;
+  statuteText: string;
+  relevanceExplanation: string;
+  applicabilityTag: string;
+}
+
 export interface ClauseAnalysis {
+  id?: string;
   clauseTitle: string;
   legaleseText: string;
   plainLanguageText: string;
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
   riskExplanation: string;
   recommendation: string;
+  saferAlternative?: string;
+  citation?: LegalStatuteCitation;
 }
 
 export interface GeneratedDocument {
@@ -46,42 +75,15 @@ export interface GeneratedDocument {
   draftText: string;
   plainSummaryText: string;
   clauses: ClauseAnalysis[];
-  riskScore: number; // 0 to 100 (100 = very safe)
+  riskScore: number; // 0 to 100 (higher = safer)
+  completenessScore: number;
   stampDutyRequired: string;
   notarizationRequired: boolean;
   registrationRequired: boolean;
   legalActReferences: string[];
-}
-
-export interface LegalTemplate {
-  id: string;
-  name: string;
-  category: 'Property & Rent' | 'Business & Startup' | 'Employment & Work' | 'Notices & Disputes';
-  description: string;
-  popularIn: string;
-  iconName: string;
-  estimatedTime: string;
-  defaultFormData: Partial<DocumentFormData>;
-}
-
-export interface LegalActInfo {
-  id: string;
-  title: string;
-  shortTitle: string;
-  year: number;
-  category: string;
-  summary: string;
-  keySections: { section: string; title: string; explanation: string }[];
-  impactForSmallBiz: string;
-}
-
-export interface StampDutyInfo {
-  state: string;
-  rentAgreementRate: string;
-  ndaRate: string;
-  serviceAgreementRate: string;
-  registrationMandatoryThreshold: string;
-  notes: string;
+  citations: LegalStatuteCitation[];
+  validationWarnings: MissingFieldWarning[];
+  disclaimer: string;
 }
 
 export interface AdvocateProfile {
@@ -100,9 +102,37 @@ export interface AdvocateProfile {
   isAvailable: boolean;
 }
 
-export interface PresentationSlide {
-  id: number;
+export interface LegalActInfo {
+  id: string;
   title: string;
-  subtitle: string;
-  content: React.ReactNode;
+  shortTitle: string;
+  year: number;
+  category: string;
+  summary: string;
+  keySections: {
+    section: string;
+    title: string;
+    explanation: string;
+  }[];
+  impactForSmallBiz: string;
+}
+
+export interface StampDutyInfo {
+  state: string;
+  rentAgreementRate: string;
+  ndaRate: string;
+  serviceAgreementRate: string;
+  registrationMandatoryThreshold: string;
+  notes: string;
+}
+
+export interface LegalTemplate {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  popularIn: string;
+  iconName: string;
+  estimatedTime: string;
+  defaultFormData: Partial<DocumentFormData>;
 }
