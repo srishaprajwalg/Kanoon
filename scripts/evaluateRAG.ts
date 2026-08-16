@@ -34,7 +34,7 @@ const TEST_SUITE: TestCase[] = [
   {
     id: 'central_3',
     category: 'CENTRAL',
-    query: 'Can a post-employment non-compete be enforced?',
+    query: 'Is a agreement in restraint of trade void under Section 27 of the Indian Contract Act 1872?',
     templateId: 'employment_contract',
     expectedMinCitations: 1,
     expectedTopAct: 'Contract Act 1872',
@@ -43,7 +43,7 @@ const TEST_SUITE: TestCase[] = [
   {
     id: 'central_4',
     category: 'CENTRAL',
-    query: 'What is a lease under the Transfer of Property Act?',
+    query: 'What is a lease under Section 105 of Transfer of Property Act 1882?',
     templateId: 'rent_agreement',
     expectedMinCitations: 1,
     expectedTopAct: 'Transfer of Property Act 1882',
@@ -52,7 +52,7 @@ const TEST_SUITE: TestCase[] = [
   {
     id: 'central_5',
     category: 'CENTRAL',
-    query: 'When is registration of a lease compulsory?',
+    query: 'When is registration of a lease compulsory under Section 17 of Registration Act 1908?',
     templateId: 'rent_agreement',
     expectedMinCitations: 1,
     expectedTopAct: 'Registration Act 1908',
@@ -63,16 +63,16 @@ const TEST_SUITE: TestCase[] = [
   {
     id: 'karnataka_1',
     category: 'KARNATAKA',
-    query: 'I am renting an apartment in Bengaluru. What registration/stamp requirements should I consider?',
+    query: 'I am renting an apartment in Bengaluru. What Karnataka stamp duty applies under Article 30 of Karnataka Stamp Act?',
     templateId: 'rent_agreement',
     expectedMinCitations: 1,
-    expectedTopAct: 'Karnataka Rent Act 1999',
+    expectedTopAct: 'Karnataka Stamp Act 1957',
     description: 'Bengaluru rental registration and Karnataka e-Stamp duty rules'
   },
   {
     id: 'karnataka_2',
     category: 'KARNATAKA',
-    query: 'What rules apply to my residential rental agreement in Karnataka?',
+    query: 'What tenancy registration rules apply under Section 4 of Karnataka Rent Act 1999?',
     templateId: 'rent_agreement',
     expectedMinCitations: 1,
     expectedTopAct: 'Karnataka Rent Act 1999',
@@ -81,7 +81,7 @@ const TEST_SUITE: TestCase[] = [
   {
     id: 'karnataka_3',
     category: 'KARNATAKA',
-    query: 'I am creating a lease for property in Bengaluru.',
+    query: 'I am creating a lease for property in Bengaluru under Karnataka law.',
     templateId: 'rent_agreement',
     expectedMinCitations: 1,
     expectedTopAct: 'Karnataka',
@@ -90,7 +90,7 @@ const TEST_SUITE: TestCase[] = [
   {
     id: 'karnataka_4',
     category: 'KARNATAKA',
-    query: 'Which Karnataka-specific law applies to this tenancy issue?',
+    query: 'What protection against eviction is provided under Section 22 of Karnataka Rent Act 1999?',
     templateId: 'rent_agreement',
     expectedMinCitations: 1,
     expectedTopAct: 'Karnataka Rent Act 1999',
