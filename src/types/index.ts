@@ -199,6 +199,7 @@ export interface LegalTemplate {
   iconName: string;
   estimatedTime: string;
   defaultFormData: Partial<DocumentFormData>;
+  isSupported?: boolean;
 }
 
 export interface ExtractedPage {

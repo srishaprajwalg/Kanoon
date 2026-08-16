@@ -33,11 +33,16 @@ export class LegalRAGEngine {
       case 'nda_agreement':
         return ['confidentiality_nda', 'general_contract'];
       case 'employment_contract':
+        return ['employment_service', 'general_contract'];
+      case 'freelance_service':
       case 'freelance_contract':
+      case 'service_agreement':
         return ['employment_service', 'general_contract'];
       case 'partnership_deed':
-      case 'legal_notice':
         return ['general_contract', 'dispute_arbitration'];
+      case 'consumer_legal_notice':
+      case 'legal_notice':
+        return ['dispute_arbitration', 'general_contract', 'consumer_rights'];
       default:
         return ['general_contract', 'lease_tenancy', 'confidentiality_nda', 'employment_service', 'dispute_arbitration', 'consumer_rights'];
     }
@@ -328,7 +333,7 @@ export class LegalRAGEngine {
     }
 
     // Financial consideration check - ONLY required for monetized contracts (e.g. Rent, Service)
-    const isMonetaryTemplate = ['rent_agreement', 'freelance_contract', 'employment_contract'].includes(formData.templateId);
+    const isMonetaryTemplate = ['rent_agreement', 'freelance_service', 'freelance_contract', 'employment_contract', 'partnership_deed'].includes(formData.templateId);
     if (isMonetaryTemplate && formData.financialAmount <= 0) {
       missingFields.push({
         fieldKey: 'financialAmount',

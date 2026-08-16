@@ -166,55 +166,228 @@ INSTRUCTIONS:
 
     // Fallback to RAG-Grounded Structuring if LLM offline or unconfigured
     if (!draftText) {
-      if (formData.templateId === 'rent_agreement') {
-        draftText = `RESIDENTIAL LEAVE AND LICENSE AGREEMENT
+      const citationsText = citations.length > 0
+        ? citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')
+        : 'Indian Contract Act 1872';
+
+      const governingState = formData.governingLawState || formData.state || 'Karnataka';
+
+      switch (formData.templateId) {
+        case 'rent_agreement':
+          draftText = `RESIDENTIAL LEAVE AND LICENSE AGREEMENT
 (Drafted under Indian Contract Act 1872 & Transfer of Property Act 1882)
 
 THIS LEAVE AND LICENSE AGREEMENT is executed at ${formData.city}, ${formData.state} on ${formData.effectiveDate}.
 
 BETWEEN:
-${partyAName.toUpperCase()} ("Licensor / Owner"), Address: ${formData.partyA.address || 'Address A'}.
+${partyAName.toUpperCase()} ("Licensor / Owner"), Address: ${formData.partyA.address || 'Address A'}, Contact: ${formData.partyA.contact || 'N/A'}.
 
 AND:
-${partyBName.toUpperCase()} ("Licensee / Tenant"), Address: ${formData.partyB.address || 'Address B'}.
+${partyBName.toUpperCase()} ("Licensee / Tenant"), Address: ${formData.partyB.address || 'Address B'}, Contact: ${formData.partyB.contact || 'N/A'}.
 
 1. GRANT OF LICENSE & TENURE:
-The Licensor hereby permits the Licensee to occupy the premises situated at ${formData.city}, ${formData.state} for a period of ${formData.durationMonths} months starting ${formData.effectiveDate}.
+The Licensor hereby permits the Licensee to occupy the residential premises situated at ${formData.city}, ${formData.state} for a period of ${formData.durationMonths} months starting ${formData.effectiveDate}.
 
-2. LICENSE FEE & SECURITY DEPOSIT:
-- Monthly Rent: ${amountFormatted} payable on or before the 5th day of each calendar month.
-- Refundable Security Deposit: ${depositFormatted}. Returned upon vacant possession after legitimate utility or damage deductions.
+2. MONTHLY LICENSE FEE & SECURITY DEPOSIT:
+- Monthly Rent: ${amountFormatted} payable on or before the 5th day of every calendar month.
+- Refundable Security Deposit: ${depositFormatted}. Refunded within 7 days of key handover, less legitimate utility arrears.
 
 3. LOCK-IN PERIOD & TERMINATION:
-- Lock-in Period: ${formData.lockInPeriodMonths || 6} months.
-- Notice Period: Post lock-in, either party may terminate by giving ${formData.noticePeriodDays} days written notice.
+- Lock-in Period: ${formData.lockInPeriodMonths || 6} months. Neither party can terminate during lock-in without paying remaining rent.
+- Notice Period: Post lock-in, either party may terminate by giving ${formData.noticePeriodDays} days advance written notice.
 
-4. STATUTORY GROUNDING & REGISTRATION:
-Grounded in ${citations.length > 0 ? citations.map(c => `${c.actShortTitle} ${c.sectionNumber}`).join(', ') : 'General Contract Law principles'}. Registration requirements and stamp duty depend on applicable state laws.${customRiderSection}
+4. STATUTORY CITATIONS & REGISTRATION COMPLIANCE:
+Grounded in ${citationsText}. Registration requirements and stamp duty depend on local state law for ${formData.state}.${customRiderSection}
 
-6. DISPUTE RESOLUTION:
-Governed by laws of ${formData.governingLawState || formData.state}, India. Disputes resolved via ${formData.disputeResolution}.
+5. DISPUTE RESOLUTION & GOVERNING LAW:
+Governed by the laws of ${governingState}, India. Disputes resolved via ${formData.disputeResolution} in ${formData.city}.
 
 _____________________________                _____________________________
-LICENSOR                                     LICENSEE`;
-      } else {
-        draftText = `${formData.documentTitle.toUpperCase()}
-(Grounded in ${citations.length > 0 ? citations.map(c => c.actShortTitle).join(', ') : 'Indian Contract Act 1872'})
+LICENSOR / OWNER                             LICENSEE / TENANT`;
+          break;
 
-THIS AGREEMENT is entered into at ${formData.city}, ${formData.state} on ${formData.effectiveDate}.
+        case 'nda_agreement':
+          draftText = `MUTUAL CONFIDENTIALITY AND NON-DISCLOSURE AGREEMENT
+(Drafted under Indian Contract Act 1872 & Information Technology Act 2000)
+
+THIS MUTUAL NON-DISCLOSURE AGREEMENT is executed at ${formData.city}, ${formData.state} on ${formData.effectiveDate}.
+
+BETWEEN:
+${partyAName.toUpperCase()} ("Disclosing / First Party"), Address: ${formData.partyA.address || 'Address A'}, Contact: ${formData.partyA.contact || 'N/A'}.
+
+AND:
+${partyBName.toUpperCase()} ("Receiving / Second Party"), Address: ${formData.partyB.address || 'Address B'}, Contact: ${formData.partyB.contact || 'N/A'}.
+
+1. SCOPE OF CONFIDENTIAL INFORMATION:
+Confidential Information includes all proprietary technical data, business plans, trade secrets, algorithms, and financial projections disclosed by either party during discussions at ${formData.city}, ${formData.state}.
+
+2. NON-DISCLOSURE & OBLIGATIONS:
+The Receiving Party shall maintain strict confidentiality over disclosed information for a duration of ${formData.durationMonths} months from the effective date. Disclosure is restricted strictly to authorized representatives with a need-to-know basis.
+
+3. EXCEPTIONS & SURVIVAL:
+Obligations do not apply to information publicly known through no breach, independently developed without access to confidential data, or required to be disclosed under valid legal subpoena.
+
+4. RETURN OF ASSETS & NOTICE:
+Upon termination or written request, all physical and digital copies of confidential assets shall be returned or destroyed within ${formData.noticePeriodDays} days.${customRiderSection}
+
+5. STATUTORY GROUNDING & DISPUTE RESOLUTION:
+Grounded in ${citationsText}. Governed by the laws of ${governingState}, India. Disputes resolved via ${formData.disputeResolution} in ${formData.city}.
+
+_____________________________                _____________________________
+DISCLOSING / FIRST PARTY                     RECEIVING / SECOND PARTY`;
+          break;
+
+        case 'freelance_service':
+        case 'freelance_contract':
+        case 'service_agreement':
+          draftText = `MASTER SERVICE AND DELIVERABLES AGREEMENT
+(Drafted under Indian Contract Act 1872 & Information Technology Act 2000)
+
+THIS MASTER SERVICE AGREEMENT is executed at ${formData.city}, ${formData.state} on ${formData.effectiveDate}.
+
+BETWEEN:
+${partyAName.toUpperCase()} ("Service Provider / Contractor"), Address: ${formData.partyA.address || 'Address A'}, Contact: ${formData.partyA.contact || 'N/A'}.
+
+AND:
+${partyBName.toUpperCase()} ("Client / Principal"), Address: ${formData.partyB.address || 'Address B'}, Contact: ${formData.partyB.contact || 'N/A'}.
+
+1. SCOPE OF SERVICES & PROJECT TENURE:
+The Service Provider agrees to deliver agreed professional services for a tenure of ${formData.durationMonths} months starting ${formData.effectiveDate}.
+
+2. COMMERCIAL CONSIDERATION & PAYMENT TERMS:
+- Total Service Fee / Contract Value: ${amountFormatted} payable per agreed invoice milestones.
+- Advance Retainer (if applicable): ${depositFormatted}.
+
+3. INTELLECTUAL PROPERTY & DELIVERABLE OWNERSHIP:
+Upon receipt of 100% full payment settlement, all custom work product, software code, and deliverables created hereunder shall vest exclusively with the Client.
+
+4. TERMINATION & NOTICE PERIOD:
+Either party may terminate this agreement prior to completion by providing ${formData.noticePeriodDays} days advance written notice.${customRiderSection}
+
+5. STATUTORY GROUNDING & GOVERNING LAW:
+Grounded in ${citationsText}. Governed by the laws of ${governingState}, India. Disputes resolved via ${formData.disputeResolution} in ${formData.city}.
+
+_____________________________                _____________________________
+SERVICE PROVIDER                             CLIENT`;
+          break;
+
+        case 'employment_contract':
+          draftText = `EMPLOYMENT TERMS AGREEMENT
+(Drafted under Indian Contract Act 1872 & State Shops and Commercial Establishments Framework)
+
+THIS EMPLOYMENT TERMS AGREEMENT is executed at ${formData.city}, ${formData.state} on ${formData.effectiveDate}.
+
+BETWEEN:
+${partyAName.toUpperCase()} ("Employer / Company"), Address: ${formData.partyA.address || 'Address A'}, Contact: ${formData.partyA.contact || 'N/A'}.
+
+AND:
+${partyBName.toUpperCase()} ("Employee"), Address: ${formData.partyB.address || 'Address B'}, Contact: ${formData.partyB.contact || 'N/A'}.
+
+1. APPOINTMENT & REMUNERATION:
+The Employer engages the Employee on full-time employment with an agreed total annual compensation (CTC) of ${amountFormatted} payable in monthly installments.
+
+2. PROBATION & LOCK-IN PERIOD:
+- Evaluation Probation Period: ${formData.lockInPeriodMonths || 3} months from effective date during which performance is reviewed.
+- Initial Contract Tenure: ${formData.durationMonths} months.
+
+3. NOTICE PERIOD & RESIGNATION:
+Either party may terminate employment during or post probation by serving ${formData.noticePeriodDays} days advance written notice or equivalent salary in lieu thereof.
+
+4. CONFIDENTIALITY & COMPANY PROPERTY:
+Employee agrees to preserve all company trade secrets and surrender all laptops, access cards, and assets upon exit.${customRiderSection}
+
+5. STATUTORY GROUNDING & GOVERNING LAW:
+Grounded in ${citationsText}. Governed by the laws of ${governingState}, India. Disputes resolved via ${formData.disputeResolution} in ${formData.city}.
+
+_____________________________                _____________________________
+EMPLOYER / COMPANY                           EMPLOYEE`;
+          break;
+
+        case 'partnership_deed':
+          draftText = `PARTNERSHIP DEED
+(Drafted under Indian Partnership Act 1932)
+
+THIS PARTNERSHIP DEED is executed at ${formData.city}, ${formData.state} on ${formData.effectiveDate}.
+
+BETWEEN:
+${partyAName.toUpperCase()} ("First Partner"), Address: ${formData.partyA.address || 'Address A'}, Contact: ${formData.partyA.contact || 'N/A'}.
+
+AND:
+${partyBName.toUpperCase()} ("Second Partner"), Address: ${formData.partyB.address || 'Address B'}, Contact: ${formData.partyB.contact || 'N/A'}.
+
+1. FIRM NAME & BUSINESS PURPOSE:
+The Partners agree to carry on joint business operations under the agreed Partnership Firm at ${formData.city}, ${formData.state} for an initial duration of ${formData.durationMonths} months.
+
+2. CAPITAL CONTRIBUTION & PROFIT SHARING:
+- Total Initial Capital Contribution: ${amountFormatted} contributed jointly by Partners.
+- Profits and losses shall be shared equally (50% - 50%) unless otherwise specified by mutual written consent.
+
+3. MANAGEMENT POWERS & BANK OPERATION:
+All major policy decisions, credit lines, and contracts above ₹1,00,000 require joint signatures of both partners.
+
+4. RETIREMENT & DISSOLUTION NOTICE:
+Any partner wishing to retire from the partnership shall provide ${formData.noticePeriodDays} days advance written notice to the other partner.${customRiderSection}
+
+5. STATUTORY GROUNDING & GOVERNING LAW:
+Grounded in ${citationsText}. Governed by the laws of ${governingState}, India. Disputes resolved via ${formData.disputeResolution} in ${formData.city}.
+
+_____________________________                _____________________________
+FIRST PARTNER                                SECOND PARTNER`;
+          break;
+
+        case 'consumer_legal_notice':
+        case 'legal_notice':
+          draftText = `FORMAL LEGAL DEMAND NOTICE
+(Issued under Consumer Protection Act 2019 / Section 138 Negotiable Instruments Act / Indian Contract Act 1872)
+
+ISSUED AT: ${formData.city}, ${formData.state}
+DATE: ${formData.effectiveDate}
+
+TO:
+${partyBName.toUpperCase()} ("Opposing Party / Recipient"), Address: ${formData.partyB.address || 'Address B'}, Contact: ${formData.partyB.contact || 'N/A'}.
+
+FROM:
+${partyAName.toUpperCase()} ("Complainant / Sender"), Address: ${formData.partyA.address || 'Address A'}, Contact: ${formData.partyA.contact || 'N/A'}.
+
+SUBJECT: FORMAL DEMAND NOTICE FOR SETTLEMENT OF UNPAID DUES / DEFECTIVE SERVICE IN THE AMOUNT OF ${amountFormatted}.
+
+SIR / MADAM,
+Under instructions from my client, you are hereby served with this formal legal demand notice:
+
+1. STATEMENT OF FACTS:
+You entered into a binding transaction with my client at ${formData.city}, ${formData.state}. Despite repeated follow-ups, you have failed to satisfy your legal obligations, resulting in total outstanding dues/damages of ${amountFormatted}.
+
+2. DEMAND FOR REMEDY:
+You are hereby called upon to remedy the breach and pay the sum of ${amountFormatted} to my client within ${formData.noticePeriodDays} days of receipt of this notice.
+
+3. NOTICE OF INTENDED LEGAL PROCEEDINGS:
+Take notice that if you fail to comply within ${formData.noticePeriodDays} days, my client will initiate civil, criminal, or consumer litigation before appropriate courts in ${formData.city}, ${formData.state} at your risk and cost.${customRiderSection}
+
+4. STATUTORY GROUNDING:
+Grounded in ${citationsText}. Governed by the laws of ${governingState}, India.
+
+_____________________________
+ADVOCATE / AUTHORIZED SENDER`;
+          break;
+
+        default:
+          draftText = `${formData.documentTitle.toUpperCase()}
+(Grounded in ${citationsText})
+
+THIS LEGAL AGREEMENT is executed at ${formData.city}, ${formData.state} on ${formData.effectiveDate}.
 
 PARTIES:
 1. ${partyAName.toUpperCase()}, Address: ${formData.partyA.address || 'Address A'}.
 2. ${partyBName.toUpperCase()}, Address: ${formData.partyB.address || 'Address B'}.
 
-1. OBLIGATIONS & CONSIDERATION:
-Agreed consideration of ${amountFormatted} for a duration of ${formData.durationMonths} months.
+1. CONSIDERATION & OBLIGATIONS:
+Agreed consideration of ${amountFormatted} over a duration of ${formData.durationMonths} months.
 
-2. STATUTORY GROUNDING:
-${citations.length > 0 ? `Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}.` : 'Insufficient statutory evidence was retrieved to confidently support specific statutory section claims.'}${customRiderSection}
+2. TERMINATION & NOTICE:
+Either party may terminate by giving ${formData.noticePeriodDays} days written notice.${customRiderSection}
 
 3. GOVERNING LAW & DISPUTES:
-Governed by laws of ${formData.governingLawState || formData.state}, India. Dispute resolution via ${formData.disputeResolution}.
+Governed by the laws of ${governingState}, India. Disputes resolved via ${formData.disputeResolution} in ${formData.city}.
 
 _____________________________                _____________________________
 FIRST PARTY                                  SECOND PARTY`;

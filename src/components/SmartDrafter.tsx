@@ -16,6 +16,133 @@ interface SmartDrafterProps {
   onOpenDocumentModal: (doc: GeneratedDocument) => void;
 }
 
+const getDocumentTypeMetadata = (templateId: string) => {
+  switch (templateId) {
+    case 'rent_agreement':
+      return {
+        partyALabel: 'First Party (Licensor / Property Owner)',
+        partyBLabel: 'Second Party (Licensee / Tenant)',
+        partyAPlaceholder: 'e.g. Ramesh Sharma',
+        partyBPlaceholder: 'e.g. Priya Tech Ventures Pvt Ltd',
+        financialLabel: 'Monthly License Fee / Rent (₹)',
+        financialShow: true,
+        depositLabel: 'Security Deposit / Advance (₹)',
+        depositShow: true,
+        durationLabel: 'Agreement Tenure (Months)',
+        durationShow: true,
+        lockInLabel: 'Lock-in Period (Months)',
+        lockInShow: true,
+        noticeLabel: 'Termination Notice Period (Days)',
+        noticeShow: true
+      };
+    case 'nda_agreement':
+      return {
+        partyALabel: 'First Party (Disclosing Party)',
+        partyBLabel: 'Second Party (Receiving Party)',
+        partyAPlaceholder: 'e.g. Apex AI Technologies Pvt Ltd',
+        partyBPlaceholder: 'e.g. CyberSec Systems LLP',
+        financialLabel: 'Stipulated Damages / Value (₹)',
+        financialShow: false,
+        depositLabel: 'Security Deposit (N/A)',
+        depositShow: false,
+        durationLabel: 'Confidentiality Obligations Tenure (Months)',
+        durationShow: true,
+        lockInLabel: 'Lock-in Commitment (N/A)',
+        lockInShow: false,
+        noticeLabel: 'Notice Period for Asset Surrender (Days)',
+        noticeShow: true
+      };
+    case 'freelance_service':
+    case 'freelance_contract':
+    case 'service_agreement':
+      return {
+        partyALabel: 'First Party (Service Provider / Contractor)',
+        partyBLabel: 'Second Party (Client / Principal)',
+        partyAPlaceholder: 'e.g. Dev Studio Solutions Pvt Ltd',
+        partyBPlaceholder: 'e.g. Global Tech Enterprise Inc',
+        financialLabel: 'Total Service Fee / Contract Value (₹)',
+        financialShow: true,
+        depositLabel: 'Advance Retainer Deposit (₹)',
+        depositShow: true,
+        durationLabel: 'Project Duration (Months)',
+        durationShow: true,
+        lockInLabel: 'Minimum Service Commitment (Months)',
+        lockInShow: false,
+        noticeLabel: 'Termination Notice Period (Days)',
+        noticeShow: true
+      };
+    case 'employment_contract':
+      return {
+        partyALabel: 'First Party (Employer / Company)',
+        partyBLabel: 'Second Party (Employee)',
+        partyAPlaceholder: 'e.g. TechCorp India Pvt Ltd',
+        partyBPlaceholder: 'e.g. Rahul Verma',
+        financialLabel: 'Annual Compensation / CTC (₹)',
+        financialShow: true,
+        depositLabel: 'Joining Advance (N/A)',
+        depositShow: false,
+        durationLabel: 'Initial Agreement Term (Months)',
+        durationShow: true,
+        lockInLabel: 'Probation Period (Months)',
+        lockInShow: true,
+        noticeLabel: 'Resignation Notice Period (Days)',
+        noticeShow: true
+      };
+    case 'partnership_deed':
+      return {
+        partyALabel: 'First Partner',
+        partyBLabel: 'Second Partner',
+        partyAPlaceholder: 'e.g. Anil Kumar',
+        partyBPlaceholder: 'e.g. Sunita Rao',
+        financialLabel: 'Total Initial Capital Contribution (₹)',
+        financialShow: true,
+        depositLabel: 'Reserve Fund (N/A)',
+        depositShow: false,
+        durationLabel: 'Deed Tenure (Months)',
+        durationShow: true,
+        lockInLabel: 'Lock-in / Exit Restriction (Months)',
+        lockInShow: false,
+        noticeLabel: 'Partner Exit Notice (Days)',
+        noticeShow: true
+      };
+    case 'consumer_legal_notice':
+    case 'legal_notice':
+      return {
+        partyALabel: 'First Party (Complainant / Sender)',
+        partyBLabel: 'Second Party (Opposing Party / Recipient)',
+        partyAPlaceholder: 'e.g. Vikram Seth',
+        partyBPlaceholder: 'e.g. E-Commerce Retailing Ltd',
+        financialLabel: 'Claim / Refund Demand Amount (₹)',
+        financialShow: true,
+        depositLabel: 'Damage Claim (N/A)',
+        depositShow: false,
+        durationLabel: 'Default Tenure (N/A)',
+        durationShow: false,
+        lockInLabel: 'Lock-in Period (N/A)',
+        lockInShow: false,
+        noticeLabel: 'Response Deadline (Days)',
+        noticeShow: true
+      };
+    default:
+      return {
+        partyALabel: 'First Party',
+        partyBLabel: 'Second Party',
+        partyAPlaceholder: 'Full Legal Name',
+        partyBPlaceholder: 'Full Legal Name',
+        financialLabel: 'Financial Amount (₹)',
+        financialShow: true,
+        depositLabel: 'Security Deposit (₹)',
+        depositShow: true,
+        durationLabel: 'Duration (Months)',
+        durationShow: true,
+        lockInLabel: 'Lock-in Period (Months)',
+        lockInShow: true,
+        noticeLabel: 'Notice Period (Days)',
+        noticeShow: true
+      };
+  }
+};
+
 export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocumentModal }) => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('rent_agreement');
   const [step, setStep] = useState<number>(1);
@@ -26,6 +153,8 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
   const [privacyConsentGiven, setPrivacyConsentGiven] = useState<boolean>(true);
 
   const selectedTemplate = LEGAL_TEMPLATES.find(t => t.id === selectedTemplateId) || LEGAL_TEMPLATES[0];
+  const meta = getDocumentTypeMetadata(selectedTemplateId);
+  const isSupportedTemplate = selectedTemplate && selectedTemplate.isSupported !== false;
 
   const [formData, setFormData] = useState<DocumentFormData>({
     templateId: selectedTemplate.id,
@@ -74,18 +203,21 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
     setSelectedTemplateId(templateId);
     setFormData(prev => {
       const activeState = prev.state || tmpl.defaultFormData.governingLawState || 'Karnataka';
+      const activeCity = prev.city || 'Bengaluru';
       return {
         ...prev,
         templateId: tmpl.id,
         documentTitle: tmpl.defaultFormData.documentTitle || tmpl.name,
-        durationMonths: tmpl.defaultFormData.durationMonths || prev.durationMonths,
-        financialAmount: tmpl.defaultFormData.financialAmount || prev.financialAmount,
-        securityDeposit: tmpl.defaultFormData.securityDeposit || prev.securityDeposit,
-        noticePeriodDays: tmpl.defaultFormData.noticePeriodDays || prev.noticePeriodDays,
-        lockInPeriodMonths: tmpl.defaultFormData.lockInPeriodMonths || prev.lockInPeriodMonths,
+        durationMonths: tmpl.defaultFormData.durationMonths ?? 12,
+        financialAmount: tmpl.defaultFormData.financialAmount ?? 0,
+        securityDeposit: tmpl.defaultFormData.securityDeposit ?? 0,
+        noticePeriodDays: tmpl.defaultFormData.noticePeriodDays ?? 30,
+        lockInPeriodMonths: tmpl.defaultFormData.lockInPeriodMonths ?? 0,
         state: activeState,
         governingLawState: activeState,
-        customClauses: tmpl.defaultFormData.customClauses ? [...tmpl.defaultFormData.customClauses] : []
+        city: activeCity,
+        customClauses: tmpl.defaultFormData.customClauses ? [...tmpl.defaultFormData.customClauses] : [],
+        selectedClauseConfigs: []
       };
     });
   };
@@ -330,6 +462,25 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
             )}
           </div>
 
+          {!isSupportedTemplate ? (
+            <div className="glass-card p-8 rounded-2xl border border-amber-500/30 text-center space-y-4 my-6">
+              <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-100">{selectedTemplate.name}</h3>
+              <p className="text-sm text-slate-400 max-w-md mx-auto">
+                Statutory RAG grounding and legal draft templates for this category are currently under legal review and validation. Please select a supported document type.
+              </p>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 text-xs transition-colors shadow-lg shadow-amber-500/20"
+              >
+                ← Select Supported Template
+              </button>
+            </div>
+          ) : (
+            <>
           {/* STEP 2 SUB-TAB NAVIGATION */}
           <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
             <button
@@ -378,7 +529,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="font-bold text-slate-200 text-sm flex items-center space-x-2">
                   <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-xs flex items-center justify-center font-extrabold">1</span>
-                  <span>First Party (Owner / Landlord / Client)</span>
+                  <span>{meta.partyALabel}</span>
                 </h3>
               </div>
 
@@ -393,7 +544,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                       partyA: { ...prev.partyA, name: e.target.value }
                     }))}
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
-                    placeholder="e.g. Ramesh Sharma"
+                    placeholder={meta.partyAPlaceholder}
                   />
                 </div>
 
@@ -447,7 +598,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="font-bold text-slate-200 text-sm flex items-center space-x-2">
                   <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-xs flex items-center justify-center font-extrabold">2</span>
-                  <span>Second Party (Tenant / Vendor / Recipient)</span>
+                  <span>{meta.partyBLabel}</span>
                 </h3>
               </div>
 
@@ -462,6 +613,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                       partyB: { ...prev.partyB, name: e.target.value }
                     }))}
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    placeholder={meta.partyBPlaceholder}
                   />
                 </div>
 
@@ -515,7 +667,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
           <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4">
             <h3 className="font-bold text-slate-200 text-sm flex items-center space-x-2 border-b border-slate-800 pb-3">
               <Scale className="w-4 h-4 text-amber-400" />
-              <span>Financial Terms & Indian Legal Jurisdiction</span>
+              <span>Document Commercial Terms & Indian Legal Jurisdiction</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
@@ -550,55 +702,65 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-400 font-medium mb-1">Monthly Fee / Consideration (₹)</label>
-                <input
-                  type="number"
-                  value={formData.financialAmount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, financialAmount: Number(e.target.value) }))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+              {meta.financialShow && (
+                <div>
+                  <label className="block text-slate-400 font-medium mb-1">{meta.financialLabel}</label>
+                  <input
+                    type="number"
+                    value={formData.financialAmount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, financialAmount: Number(e.target.value) }))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              )}
 
-              <div>
-                <label className="block text-slate-400 font-medium mb-1">Security Deposit / Advance (₹)</label>
-                <input
-                  type="number"
-                  value={formData.securityDeposit || 0}
-                  onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: Number(e.target.value) }))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+              {meta.depositShow && (
+                <div>
+                  <label className="block text-slate-400 font-medium mb-1">{meta.depositLabel}</label>
+                  <input
+                    type="number"
+                    value={formData.securityDeposit || 0}
+                    onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: Number(e.target.value) }))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              )}
 
-              <div>
-                <label className="block text-slate-400 font-medium mb-1">Duration (Months)</label>
-                <input
-                  type="number"
-                  value={formData.durationMonths}
-                  onChange={(e) => setFormData(prev => ({ ...prev, durationMonths: Number(e.target.value) }))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+              {meta.durationShow && (
+                <div>
+                  <label className="block text-slate-400 font-medium mb-1">{meta.durationLabel}</label>
+                  <input
+                    type="number"
+                    value={formData.durationMonths}
+                    onChange={(e) => setFormData(prev => ({ ...prev, durationMonths: Number(e.target.value) }))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              )}
 
-              <div>
-                <label className="block text-slate-400 font-medium mb-1">Notice Period (Days)</label>
-                <input
-                  type="number"
-                  value={formData.noticePeriodDays}
-                  onChange={(e) => setFormData(prev => ({ ...prev, noticePeriodDays: Number(e.target.value) }))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+              {meta.noticeShow && (
+                <div>
+                  <label className="block text-slate-400 font-medium mb-1">{meta.noticeLabel}</label>
+                  <input
+                    type="number"
+                    value={formData.noticePeriodDays}
+                    onChange={(e) => setFormData(prev => ({ ...prev, noticePeriodDays: Number(e.target.value) }))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              )}
 
-              <div>
-                <label className="block text-slate-400 font-medium mb-1">Lock-in Period (Months)</label>
-                <input
-                  type="number"
-                  value={formData.lockInPeriodMonths || 0}
-                  onChange={(e) => setFormData(prev => ({ ...prev, lockInPeriodMonths: Number(e.target.value) }))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+              {meta.lockInShow && (
+                <div>
+                  <label className="block text-slate-400 font-medium mb-1">{meta.lockInLabel}</label>
+                  <input
+                    type="number"
+                    value={formData.lockInPeriodMonths || 0}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lockInPeriodMonths: Number(e.target.value) }))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-slate-400 font-medium mb-1">Dispute Resolution</label>
@@ -702,6 +864,8 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               )}
             </button>
           </div>
+          </>
+          )}
         </div>
       )}
 
