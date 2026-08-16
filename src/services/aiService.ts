@@ -102,7 +102,7 @@ The Licensor hereby permits the Licensee to occupy the residential premises situ
 Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}. Registration requirements and stamp duty depend on local state law.${customRiderSection}
 
 6. DISPUTE RESOLUTION & GOVERNING LAW:
-Governed by laws of ${formData.governingLawState}, India. Disputes resolved via ${formData.disputeResolution} in ${formData.city}.
+Governed by laws of ${formData.governingLawState || formData.state}, India. Disputes resolved via ${formData.disputeResolution} in ${formData.city}.
 
 _____________________________                _____________________________
 LICENSOR                                     LICENSEE`;
@@ -123,7 +123,7 @@ Agreed consideration of ${amountFormatted} over a duration of ${formData.duratio
 Either party may terminate by giving ${formData.noticePeriodDays} days written notice.${customRiderSection}
 
 3. GOVERNING LAW & DISPUTES:
-Governed by laws of ${formData.governingLawState}, India. Disputes resolved via ${formData.disputeResolution}.
+Governed by laws of ${formData.governingLawState || formData.state}, India. Disputes resolved via ${formData.disputeResolution}.
 
 _____________________________                _____________________________
 FIRST PARTY                                  SECOND PARTY`;

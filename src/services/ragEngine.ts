@@ -1,4 +1,5 @@
 import { INDIAN_LEGAL_CORPUS } from '../data/legalCorpus';
+import { enrichCitationWithOfficialProvenance } from '../data/statutoryRegistry';
 import { generateDenseEmbedding, calculateCosineSimilarity, getCorpusEmbedding, precalculateCorpusEmbeddings } from './embeddingService';
 import type { LegalStatuteCitation, ValidationResult, MissingFieldWarning, DocumentFormData } from '../types';
 
@@ -128,7 +129,7 @@ export class LegalRAGEngine {
       const categoryLabel = item.applicabilityCategory.replace(/_/g, ' ');
       const whyThisClause = `This provision was retrieved because the request concerns ${categoryLabel} under ${item.jurisdiction} law, matching ${item.actShortTitle} ${item.sectionNumber} (${item.sectionTitle}) with a 384D vector similarity of ${finalScore.toFixed(2)}.`;
 
-      return {
+      return enrichCitationWithOfficialProvenance({
         id: item.id,
         actName: item.actName,
         actShortTitle: item.actShortTitle,
@@ -143,6 +144,8 @@ export class LegalRAGEngine {
         applicabilityTag: item.applicabilityCategory,
         jurisdiction: item.jurisdiction,
         sourceUrl: item.sourceUrl,
+        pdfUrl: item.pdfUrl,
+        sourcePdfFilename: item.sourcePdfFilename,
         sourceDocument: item.sourceDocument || `${item.actShortTitle} Official Text`,
         sourceTier: item.sourceTier || 'Tier 1 (Official Government)',
         effectiveDate: item.effectiveDate,
@@ -152,7 +155,7 @@ export class LegalRAGEngine {
         similarityScore: parseFloat(finalScore.toFixed(2)),
         confidenceLevel,
         evidenceStrength
-      };
+      });
     });
   }
 
@@ -234,7 +237,7 @@ export class LegalRAGEngine {
       const categoryLabel = item.applicabilityCategory.replace(/_/g, ' ');
       const whyThisClause = `This provision was retrieved because the request concerns ${categoryLabel} under ${item.jurisdiction} law, matching ${item.actShortTitle} ${item.sectionNumber} (${item.sectionTitle}) with a vector cosine similarity score of ${finalScore.toFixed(2)}.`;
 
-      return {
+      return enrichCitationWithOfficialProvenance({
         id: item.id,
         actName: item.actName,
         actShortTitle: item.actShortTitle,
@@ -249,6 +252,8 @@ export class LegalRAGEngine {
         applicabilityTag: item.applicabilityCategory,
         jurisdiction: item.jurisdiction,
         sourceUrl: item.sourceUrl,
+        pdfUrl: item.pdfUrl,
+        sourcePdfFilename: item.sourcePdfFilename,
         sourceDocument: item.sourceDocument || `${item.actShortTitle} Official Text`,
         sourceTier: item.sourceTier || 'Tier 1 (Official Government)',
         effectiveDate: item.effectiveDate,
@@ -258,7 +263,7 @@ export class LegalRAGEngine {
         similarityScore: parseFloat(finalScore.toFixed(2)),
         confidenceLevel,
         evidenceStrength
-      };
+      });
     });
   }
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { GeneratedDocument, LegalRiskBrief } from '../types';
 import { Printer, Download, Copy, X, CheckCircle2, Scale } from 'lucide-react';
-import jsPDF from 'jspdf';
+import { exportDocumentToPDF } from '../utils/pdfExporter';
 import { generateBriefFromDraftedDocument } from '../services/briefGenerator';
 import { LegalRiskBriefModal } from './LegalRiskBriefModal';
 
@@ -34,20 +34,11 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
   };
 
   const handleDownloadPDF = () => {
-    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(16);
-    pdf.text(document.title, 40, 50);
-
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(`State Jurisdiction: ${document.state} | Plain-Language AI Legal Draft`, 40, 68);
-    pdf.text(`---------------------------------------------------------------------------------------------------`, 40, 78);
-
-    const splitText = pdf.splitTextToSize(document.draftText, 515);
-    pdf.text(splitText, 40, 100);
-
-    pdf.save(`${document.title.replace(/\s+/g, '_')}_KanoonAI.pdf`);
+    exportDocumentToPDF({
+      title: document.title,
+      state: document.state,
+      draftText: document.draftText
+    });
   };
 
   return (

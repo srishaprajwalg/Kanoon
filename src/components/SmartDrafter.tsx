@@ -9,7 +9,7 @@ import {
   Copy, CheckCircle2, ChevronRight, Scale, Info, Layers, RefreshCw,
   AlertTriangle, BookOpen, Check, Lock, ExternalLink, Sliders
 } from 'lucide-react';
-import jsPDF from 'jspdf';
+import { exportDocumentToPDF } from '../utils/pdfExporter';
 
 interface SmartDrafterProps {
   apiKey?: string;
@@ -72,18 +72,22 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
     const tmpl = LEGAL_TEMPLATES.find(t => t.id === templateId);
     if (!tmpl) return;
     setSelectedTemplateId(templateId);
-    setFormData(prev => ({
-      ...prev,
-      templateId: tmpl.id,
-      documentTitle: tmpl.defaultFormData.documentTitle || tmpl.name,
-      durationMonths: tmpl.defaultFormData.durationMonths || prev.durationMonths,
-      financialAmount: tmpl.defaultFormData.financialAmount || prev.financialAmount,
-      securityDeposit: tmpl.defaultFormData.securityDeposit || prev.securityDeposit,
-      noticePeriodDays: tmpl.defaultFormData.noticePeriodDays || prev.noticePeriodDays,
-      lockInPeriodMonths: tmpl.defaultFormData.lockInPeriodMonths || prev.lockInPeriodMonths,
-      governingLawState: tmpl.defaultFormData.governingLawState || prev.governingLawState,
-      customClauses: tmpl.defaultFormData.customClauses ? [...tmpl.defaultFormData.customClauses] : []
-    }));
+    setFormData(prev => {
+      const activeState = prev.state || tmpl.defaultFormData.governingLawState || 'Karnataka';
+      return {
+        ...prev,
+        templateId: tmpl.id,
+        documentTitle: tmpl.defaultFormData.documentTitle || tmpl.name,
+        durationMonths: tmpl.defaultFormData.durationMonths || prev.durationMonths,
+        financialAmount: tmpl.defaultFormData.financialAmount || prev.financialAmount,
+        securityDeposit: tmpl.defaultFormData.securityDeposit || prev.securityDeposit,
+        noticePeriodDays: tmpl.defaultFormData.noticePeriodDays || prev.noticePeriodDays,
+        lockInPeriodMonths: tmpl.defaultFormData.lockInPeriodMonths || prev.lockInPeriodMonths,
+        state: activeState,
+        governingLawState: activeState,
+        customClauses: tmpl.defaultFormData.customClauses ? [...tmpl.defaultFormData.customClauses] : []
+      };
+    });
   };
 
   const handleAddClause = () => {
@@ -145,21 +149,11 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
 
   const handleDownloadPDF = () => {
     if (!generatedDoc) return;
-    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
-    
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(16);
-    pdf.text(generatedDoc.title, 40, 50);
-
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(`State Jurisdiction: ${generatedDoc.state} | RAG Grounded AI Legal Draft`, 40, 68);
-    pdf.text(`---------------------------------------------------------------------------------------------------`, 40, 78);
-
-    const splitText = pdf.splitTextToSize(generatedDoc.draftText, 515);
-    pdf.text(splitText, 40, 100);
-
-    pdf.save(`${generatedDoc.title.replace(/\s+/g, '_')}_KanoonAI.pdf`);
+    exportDocumentToPDF({
+      title: generatedDoc.title,
+      state: generatedDoc.state,
+      draftText: generatedDoc.draftText
+    });
   };
 
   return (
@@ -847,10 +841,21 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                                 href={cit.sourceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-amber-400 hover:text-amber-300 underline font-mono flex items-center space-x-0.5 text-[10.5px]"
+                                className="text-amber-400 hover:text-amber-300 underline font-mono flex items-center space-x-1 text-[10.5px]"
                               >
-                                <span>{cit.jurisdiction === 'KARNATAKA' ? 'Karnataka Govt' : 'India Code'}</span>
+                                <span>View Official Source</span>
                                 <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                            {(cit.pdfUrl || cit.sourceUrl) && (
+                              <a
+                                href={cit.pdfUrl || cit.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-emerald-400 hover:text-emerald-300 underline font-mono flex items-center space-x-1 text-[10.5px]"
+                              >
+                                <span>View Official PDF</span>
+                                <FileText className="w-2.5 h-2.5" />
                               </a>
                             )}
                           </div>

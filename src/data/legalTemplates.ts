@@ -17,7 +17,7 @@ export const LEGAL_TEMPLATES: LegalTemplate[] = [
       noticePeriodDays: 30,
       lockInPeriodMonths: 6,
       disputeResolution: 'Arbitration',
-      governingLawState: 'Maharashtra',
+      governingLawState: 'Karnataka',
       usePlainLanguage: true,
       customClauses: [
         'No structural alterations permitted without written consent from Owner.',
@@ -133,7 +133,7 @@ export const LEGAL_TEMPLATES: LegalTemplate[] = [
       financialAmount: 85000,
       noticePeriodDays: 15,
       disputeResolution: 'Courts',
-      governingLawState: 'Maharashtra',
+      governingLawState: 'Karnataka',
       usePlainLanguage: true,
       customClauses: [
         'Demand for immediate payment within 15 days of notice receipt.',

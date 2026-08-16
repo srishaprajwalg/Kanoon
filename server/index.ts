@@ -139,7 +139,7 @@ You MUST NOT fabricate statutory citations or section numbers. If the provided s
 INSTRUCTIONS:
 1. Incorporate and cite ONLY the retrieved statutory sections explicitly inside relevant clauses.
 2. Maintain plain-language clarity while preserving legal enforceability under Indian law.
-3. State clearly that stamp duty and registration requirements depend on applicable state laws (e.g. Maharashtra Rent Control Act requires registration regardless of tenure). Do NOT make blanket claims that 11-month agreements are universally exempt from registration.
+3. Ensure execution location and governing law state strictly match the user's selected state (${formData.state}). State clearly that stamp duty and registration requirements depend on applicable state laws for ${formData.state}. Do NOT introduce or reference unrelated states (such as Maharashtra or Delhi) as the document jurisdiction unless explicitly specified in user input.
 4. Output clean plain text formatted with numbered sections.`;
 
         const response = await aiClient.models.generateContent({
@@ -193,7 +193,7 @@ The Licensor hereby permits the Licensee to occupy the premises situated at ${fo
 Grounded in ${citations.length > 0 ? citations.map(c => `${c.actShortTitle} ${c.sectionNumber}`).join(', ') : 'General Contract Law principles'}. Registration requirements and stamp duty depend on applicable state laws.${customRiderSection}
 
 6. DISPUTE RESOLUTION:
-Governed by laws of ${formData.governingLawState}, India. Disputes resolved via ${formData.disputeResolution}.
+Governed by laws of ${formData.governingLawState || formData.state}, India. Disputes resolved via ${formData.disputeResolution}.
 
 _____________________________                _____________________________
 LICENSOR                                     LICENSEE`;
@@ -214,7 +214,7 @@ Agreed consideration of ${amountFormatted} for a duration of ${formData.duration
 ${citations.length > 0 ? `Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}.` : 'Insufficient statutory evidence was retrieved to confidently support specific statutory section claims.'}${customRiderSection}
 
 3. GOVERNING LAW & DISPUTES:
-Governed by laws of ${formData.governingLawState}, India. Dispute resolution via ${formData.disputeResolution}.
+Governed by laws of ${formData.governingLawState || formData.state}, India. Dispute resolution via ${formData.disputeResolution}.
 
 _____________________________                _____________________________
 FIRST PARTY                                  SECOND PARTY`;

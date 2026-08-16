@@ -15,6 +15,7 @@ export interface CorpusItem {
   jurisdiction: 'CENTRAL' | 'KARNATAKA';
   sourcePdfFilename?: string;
   sourceUrl?: string;
+  pdfUrl?: string;
   sourceDomain?: string;
   sourceDocument?: string;
   sourceType?: 'PRIMARY_SOURCE_GOVERNMENT_PDF';

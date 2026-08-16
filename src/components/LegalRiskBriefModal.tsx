@@ -423,8 +423,19 @@ export const LegalRiskBriefModal: React.FC<LegalRiskBriefModalProps> = ({
                               rel="noopener noreferrer"
                               className="text-amber-400 hover:underline flex items-center space-x-1 font-medium"
                             >
-                              <span>Official India Code URL</span>
+                              <span>View Official Source</span>
                               <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                          {(cit.pdfUrl || cit.sourceUrl) && (
+                            <a
+                              href={cit.pdfUrl || cit.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-400 hover:underline flex items-center space-x-1 font-medium"
+                            >
+                              <span>View Official PDF</span>
+                              <FileText className="w-3 h-3" />
                             </a>
                           )}
                           {cit.sha256 && (

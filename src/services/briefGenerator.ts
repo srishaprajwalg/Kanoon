@@ -311,6 +311,9 @@ export function formatBriefAsText(brief: LegalRiskBrief): string {
       if (cit.sourceUrl) {
         lines.push(`  • Official Source URL: ${cit.sourceUrl}`);
       }
+      if (cit.pdfUrl) {
+        lines.push(`  • Official Source PDF: ${cit.pdfUrl}`);
+      }
       if (cit.sha256) {
         lines.push(`  • Provenance SHA-256: ${cit.sha256}`);
       }

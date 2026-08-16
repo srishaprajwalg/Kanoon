@@ -658,16 +658,28 @@ export const DocumentReviewer: React.FC<DocumentReviewerProps> = ({ onNavigateTo
                                 <span className="text-[10px] text-slate-500 font-mono">Similarity: {((cit.similarityScore || 0) * 100).toFixed(1)}%</span>
                               </div>
                               <p className="text-slate-300 text-[11px] font-mono">{cit.statuteText}</p>
-                              {cit.sourceUrl && (
-                                <a
-                                  href={cit.sourceUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:underline pt-1"
-                                >
-                                  Official Gazette Entry <ExternalLink className="w-3 h-3" />
-                                </a>
-                              )}
+                              <div className="flex items-center gap-2 pt-1 flex-wrap">
+                                {cit.sourceUrl && (
+                                  <a
+                                    href={cit.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:underline"
+                                  >
+                                    View Official Source <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                )}
+                                {(cit.pdfUrl || cit.sourceUrl) && (
+                                  <a
+                                    href={cit.pdfUrl || cit.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[10px] text-emerald-400 hover:underline"
+                                  >
+                                    View Official PDF <FileText className="w-3 h-3" />
+                                  </a>
+                                )}
+                              </div>
                             </div>
                           ))
                         ) : (

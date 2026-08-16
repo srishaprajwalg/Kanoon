@@ -99,7 +99,9 @@ export interface LegalStatuteCitation {
   relevanceExplanation: string;
   applicabilityTag: string;
   jurisdiction?: string;
-  sourceUrl?: string; // India Code Official URI
+  sourceUrl?: string; // India Code Official Webpage URI
+  pdfUrl?: string; // Direct Official Statutory PDF Download URL
+  sourcePdfFilename?: string; // Official Raw PDF Filename in Corpus
   effectiveDate?: string;
   confidenceScore?: number; // 0.0 to 1.0
   similarityScore?: number; // Cosine similarity score (e.g. 0.87)
