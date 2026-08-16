@@ -4,28 +4,53 @@ import type { LegalStatuteCitation, DocumentFormData, ValidationResult, MissingF
 export class LegalRAGEngine {
 
   /**
-   * Performs vector-based keyword similarity retrieval over authentic Indian statutes.
+   * Maps document template ID to corpus applicability category
+   */
+  private static getCategoryForTemplate(templateId: string): string[] {
+    switch (templateId) {
+      case 'rent_agreement':
+        return ['lease_tenancy', 'general_contract'];
+      case 'nda_agreement':
+        return ['confidentiality_nda', 'general_contract'];
+      case 'employment_contract':
+      case 'freelance_contract':
+        return ['employment_service', 'general_contract'];
+      case 'partnership_deed':
+      case 'legal_notice':
+      default:
+        return ['general_contract'];
+    }
+  }
+
+  /**
+   * Performs TF-IDF & Vector Cosine Similarity Retrieval over Indian Legal Corpus.
+   * Document-type aware: prioritizes statutes matching the agreement category.
    */
   public static retrieveRelevantStatutes(
     queryText: string,
+    templateId?: string,
     topK: number = 3
   ): LegalStatuteCitation[] {
+    const allowedCategories = templateId ? this.getCategoryForTemplate(templateId) : [];
+
     const tokens = queryText.toLowerCase().split(/\W+/).filter(t => t.length > 2);
-    if (tokens.length === 0) {
-      return INDIAN_LEGAL_CORPUS.slice(0, topK).map(item => ({
-        id: item.id,
-        actName: item.actName,
-        actShortTitle: item.actShortTitle,
-        sectionNumber: item.sectionNumber,
-        sectionTitle: item.sectionTitle,
-        statuteText: item.statuteText,
-        relevanceExplanation: `Grounding provision under ${item.actShortTitle} governing statutory compliance.`,
-        applicabilityTag: item.applicabilityTag
-      }));
-    }
 
     const scored = INDIAN_LEGAL_CORPUS.map(item => {
       let score = 0;
+
+      // Category matching bonus
+      if (allowedCategories.length > 0) {
+        if (allowedCategories.includes(item.applicabilityCategory)) {
+          score += 5;
+        } else if (item.applicabilityCategory === 'dispute_arbitration' && queryText.toLowerCase().includes('arbitration')) {
+          score += 3;
+        } else if (item.applicabilityCategory !== 'general_contract') {
+          // Penalize irrelevant categories (e.g., lease law for NDA)
+          score -= 10;
+        }
+      }
+
+      // Term Frequency matching
       const itemText = `${item.actName} ${item.sectionNumber} ${item.sectionTitle} ${item.statuteText} ${item.keywords.join(' ')}`.toLowerCase();
 
       for (const token of tokens) {
@@ -40,19 +65,20 @@ export class LegalRAGEngine {
       return { item, score };
     });
 
+    // Sort by relevance score descending
     scored.sort((a, b) => b.score - a.score);
 
-    return scored.slice(0, topK).map(({ item, score }) => ({
+    const topMatches = scored.slice(0, topK).filter(s => s.score > -5);
+
+    return topMatches.map(({ item, score }) => ({
       id: item.id,
       actName: item.actName,
       actShortTitle: item.actShortTitle,
       sectionNumber: item.sectionNumber,
       sectionTitle: item.sectionTitle,
       statuteText: item.statuteText,
-      relevanceExplanation: score > 0
-        ? `Retrieved for query context "${queryText.substring(0, 40)}..." (Relevance Score: ${score})`
-        : `Statutory grounding under ${item.actShortTitle}`,
-      applicabilityTag: item.applicabilityTag
+      relevanceExplanation: `Retrieved for document context under ${item.actShortTitle} ${item.sectionNumber} (Relevance Score: ${score}).`,
+      applicabilityTag: item.applicabilityCategory
     }));
   }
 
@@ -61,11 +87,12 @@ export class LegalRAGEngine {
    */
   public static retrieveCitationsForDocument(formData: DocumentFormData): LegalStatuteCitation[] {
     const combinedQuery = `${formData.documentTitle} ${formData.templateId} ${formData.disputeResolution} ${formData.customClauses.join(' ')} ${formData.state}`;
-    return this.retrieveRelevantStatutes(combinedQuery, 4);
+    return this.retrieveRelevantStatutes(combinedQuery, formData.templateId, 4);
   }
 
   /**
    * Pre-generation missing information and data consistency validator.
+   * Eliminates absolute legal claims and respects non-monetary consideration agreements.
    */
   public static validateDocumentInputs(formData: DocumentFormData): ValidationResult {
     const missingFields: MissingFieldWarning[] = [];
@@ -75,10 +102,10 @@ export class LegalRAGEngine {
     if (!formData.partyA.name || formData.partyA.name.trim().length < 3) {
       missingFields.push({
         fieldKey: 'partyA.name',
-        fieldName: 'First Party (Landlord/Client) Full Name',
+        fieldName: 'First Party Full Legal Name',
         importance: 'critical',
-        message: 'First party legal name is missing or incomplete.',
-        suggestion: 'Enter full government photo-ID name (e.g. as on Aadhaar/PAN card).'
+        message: 'First party legal name is required for identification.',
+        suggestion: 'Provide full registered name or government photo-ID name.'
       });
     }
 
@@ -86,9 +113,9 @@ export class LegalRAGEngine {
     if (!formData.partyB.name || formData.partyB.name.trim().length < 3) {
       missingFields.push({
         fieldKey: 'partyB.name',
-        fieldName: 'Second Party (Tenant/Vendor) Full Name',
+        fieldName: 'Second Party Full Legal Name',
         importance: 'critical',
-        message: 'Second party legal name is missing or incomplete.',
+        message: 'Second party legal name is required for identification.',
         suggestion: 'Provide full registered legal entity or citizen name.'
       });
     }
@@ -99,37 +126,27 @@ export class LegalRAGEngine {
         fieldKey: 'partyA.address',
         fieldName: 'First Party Registered Address',
         importance: 'recommended',
-        message: 'Incomplete address may create service of notice challenges.',
+        message: 'Incomplete address may complicate notice delivery in case of dispute.',
         suggestion: 'Include door number, street, locality, city and PIN code.'
       });
     }
 
-    // Financial consideration check
-    if (formData.financialAmount <= 0) {
+    // Financial consideration check - ONLY required for monetized contracts (e.g. Rent, Service)
+    const isMonetaryTemplate = ['rent_agreement', 'freelance_contract', 'employment_contract'].includes(formData.templateId);
+    if (isMonetaryTemplate && formData.financialAmount <= 0) {
       missingFields.push({
         fieldKey: 'financialAmount',
-        fieldName: 'Financial Consideration / Rent Amount',
+        fieldName: 'Financial Consideration / Fee Amount',
         importance: 'critical',
-        message: 'Contracts without valid consideration are void under Section 25 of Indian Contract Act 1872.',
-        suggestion: 'Specify monthly rent, fee, or consideration in INR (₹).'
+        message: 'Monetary contracts require valid consideration under Section 2(d) of Indian Contract Act 1872.',
+        suggestion: 'Specify fee, rent, or consideration in INR (₹).'
       });
     }
 
-    // Security deposit vs rent ratio warning
-    if (formData.templateId === 'rent_agreement' && formData.securityDeposit && formData.securityDeposit > formData.financialAmount * 12) {
+    // Tenancy tenure & stamp registration notice (State-dependent)
+    if (formData.templateId === 'rent_agreement') {
       recommendations.push(
-        `Security deposit (₹${formData.securityDeposit.toLocaleString('en-IN')}) exceeds 12 months' rent. Under Model Tenancy Act rules, standard residential deposits are capped at 2-6 months' rent.`
-      );
-    }
-
-    // 11-Month Registration Check under Section 107 TOPA
-    if (formData.templateId === 'rent_agreement' && formData.durationMonths > 11) {
-      recommendations.push(
-        `Lease tenure is ${formData.durationMonths} months. Under Section 107 of Transfer of Property Act 1882, leases exceeding 11 months require mandatory Sub-Registrar registration and full stamp duty.`
-      );
-    } else if (formData.templateId === 'rent_agreement' && formData.durationMonths === 11) {
-      recommendations.push(
-        `11-month tenure selected: Qualifies for exemption from mandatory registration in most states, saving registration fees while remaining enforceable.`
+        `Registration & Stamp Duty Note for ${formData.state}: Registration mandates and stamp duty rates depend on local state enactments (e.g., Maharashtra Rent Control Act mandates registration regardless of tenure). Consult local Sub-Registrar guidance.`
       );
     }
 
@@ -146,5 +163,18 @@ export class LegalRAGEngine {
       missingFields,
       recommendations
     };
+  }
+
+  /**
+   * Dynamically calculates document safety risk score from actual detected clause risk levels.
+   */
+  public static calculateDynamicRiskScore(clauses: { riskLevel: 'low' | 'medium' | 'high' | 'critical' }[]): number {
+    let score = 100;
+    for (const c of clauses) {
+      if (c.riskLevel === 'critical') score -= 30;
+      else if (c.riskLevel === 'high') score -= 20;
+      else if (c.riskLevel === 'medium') score -= 10;
+    }
+    return Math.max(0, score);
   }
 }

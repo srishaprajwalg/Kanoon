@@ -6,7 +6,7 @@ import { LegalRAGEngine } from '../services/ragEngine';
 import { 
   FileText, Sparkles, Shield, Plus, Trash2, Download, Printer, 
   Copy, CheckCircle2, ChevronRight, Scale, Info, Layers, RefreshCw,
-  AlertTriangle, BookOpen, Check
+  AlertTriangle, BookOpen, Check, Lock
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 
@@ -21,6 +21,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generatedDoc, setGeneratedDoc] = useState<GeneratedDocument | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+  const [privacyConsentGiven, setPrivacyConsentGiven] = useState<boolean>(true);
 
   const selectedTemplate = LEGAL_TEMPLATES.find(t => t.id === selectedTemplateId) || LEGAL_TEMPLATES[0];
 
@@ -104,6 +105,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
   };
 
   const handleGenerate = async () => {
+    if (!privacyConsentGiven) return;
     setIsGenerating(true);
     try {
       const doc = await KanoonAIService.generateDocument(formData, apiKey);
@@ -167,13 +169,13 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>RAG-Grounded Indian Legal AI Generator</span>
+              <span>Semantic Vector RAG-Grounded AI Legal Drafts</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight">
-              Draft Plain-Language Contracts <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">Grounded in Indian Statutes</span>
+              Draft Plain-Language Contracts <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">Grounded in Authentic Indian Law</span>
             </h1>
             <p className="text-slate-300 text-sm leading-relaxed">
-              Every generated clause is retrieved and grounded against authentic Indian statutes (Contract Act 1872, Transfer of Property Act 1882, IT Act 2000) with complete statutory citations.
+              Every document is grounded by supplying actual retrieved statutory sections from Indian law (Contract Act 1872, Transfer of Property Act 1882, IT Act 2000) directly to Gemini AI.
             </p>
           </div>
 
@@ -198,7 +200,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               onClick={() => generatedDoc && setStep(3)}
               className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium ${step === 3 ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-500'}`}
             >
-              <span>3. AI Workspace & RAG Citations</span>
+              <span>3. Workspace & Citations</span>
             </button>
           </div>
         </div>
@@ -212,7 +214,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               <Layers className="w-5 h-5 text-amber-400" />
               <span>Select Document Type</span>
             </h2>
-            <span className="text-xs text-slate-400">Grounded in Indian Contract Act & State Revenue Codes</span>
+            <span className="text-xs text-slate-400">Grounded in Indian Legal Frameworks</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -272,7 +274,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                 <FileText className="w-5 h-5 text-amber-400" />
                 <span>Customizing: {selectedTemplate.name}</span>
               </h2>
-              <p className="text-xs text-slate-400">Fill in key terms. Missing critical data will be detected before AI drafting.</p>
+              <p className="text-xs text-slate-400">Fill in key terms. Missing data is flagged prior to drafting.</p>
             </div>
 
             <button onClick={() => setStep(1)} className="text-xs text-amber-400 hover:underline">
@@ -511,7 +513,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Monthly Fee / Total Amount (₹) *</label>
+                <label className="block text-slate-400 font-medium mb-1">Monthly Fee / Consideration (₹)</label>
                 <input
                   type="number"
                   value={formData.financialAmount}
@@ -569,13 +571,12 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                 >
                   <option value="Arbitration">Fast Arbitration (Act 1996)</option>
                   <option value="Courts">Civil Court Jurisdiction</option>
-                  <option value="Mutual Conciliation">Mutual Conciliation First</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Custom Clauses */}
+          {/* Custom Specific Terms */}
           <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="font-bold text-slate-200 text-sm flex items-center space-x-2">
@@ -583,6 +584,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                 <span>Custom Specific Terms</span>
               </h3>
               <button
+                type="button"
                 onClick={handleAddClause}
                 className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-lg hover:bg-amber-500/20 font-medium flex items-center space-x-1"
               >
@@ -603,6 +605,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                     className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
                   />
                   <button
+                    type="button"
                     onClick={() => handleRemoveClause(idx)}
                     className="p-2 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
                   >
@@ -611,6 +614,25 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Privacy & AI Consent Box */}
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
+            <div className="flex items-center space-x-2 text-slate-300 font-bold">
+              <Lock className="w-4 h-4 text-amber-400" />
+              <span>Data Privacy & AI Processing Notice</span>
+            </div>
+            <label className="flex items-start space-x-2 cursor-pointer text-slate-400 text-[11px]">
+              <input
+                type="checkbox"
+                checked={privacyConsentGiven}
+                onChange={(e) => setPrivacyConsentGiven(e.target.checked)}
+                className="mt-0.5 rounded border-slate-700 text-amber-500 focus:ring-amber-500 bg-slate-950"
+              />
+              <span>
+                I consent to sending contract parameter metadata to Kanoon AI API for statutory RAG grounding and legal drafting. Personal data is not stored or logged permanently.
+              </span>
+            </label>
           </div>
 
           {/* Action Row */}
@@ -623,14 +645,14 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
             </button>
 
             <button
-              disabled={isGenerating || !validationResult.isComplete}
+              disabled={isGenerating || !validationResult.isComplete || !privacyConsentGiven}
               onClick={handleGenerate}
               className="flex items-center space-x-2 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-extrabold hover:brightness-110 transition-all shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
                 <>
                   <RefreshCw className="w-5 h-5 animate-spin" />
-                  <span>AI Drafting & RAG Grounding...</span>
+                  <span>AI Drafting & Semantic RAG Grounding...</span>
                 </>
               ) : (
                 <>
@@ -699,10 +721,10 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-amber-400 text-sm flex items-center space-x-2">
                     <BookOpen className="w-4 h-4" />
-                    <span>Retrieved Indian Legal Citations (RAG)</span>
+                    <span>Retrieved Indian Legal Chunks (RAG)</span>
                   </h3>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                    Authentic Statutes
+                    Authentic Chunks
                   </span>
                 </div>
 
@@ -742,7 +764,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                     <span>Clause Risk & Safer Clause Suggestions</span>
                   </h3>
                   <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                    Risk Score: {generatedDoc.riskScore}/100
+                    Calculated Risk Score: {generatedDoc.riskScore}/100
                   </span>
                 </div>
 

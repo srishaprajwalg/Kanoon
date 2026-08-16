@@ -55,18 +55,12 @@ export class KanoonAIService {
 
     const partyAName = formData.partyA.name || 'First Party';
     const partyBName = formData.partyB.name || 'Second Party';
-    const amountFormatted = new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(formData.financialAmount);
+    const amountFormatted = formData.financialAmount > 0
+      ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(formData.financialAmount)
+      : 'Non-monetary Consideration';
 
-    const depositFormatted = formData.securityDeposit
-      ? new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
-          maximumFractionDigits: 0
-        }).format(formData.securityDeposit)
+    const depositFormatted = formData.securityDeposit && formData.securityDeposit > 0
+      ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(formData.securityDeposit)
       : 'N/A';
 
     let draftText = '';
@@ -93,8 +87,8 @@ The Licensor hereby permits the Licensee to occupy the residential premises situ
 - Lock-in Period: ${formData.lockInPeriodMonths || 6} months. Neither party can terminate during lock-in without paying remaining rent.
 - Notice Period: Post lock-in, either party may terminate by giving ${formData.noticePeriodDays} days advance written notice.
 
-4. STATUTORY CITATIONS:
-Grounded in Indian Contract Act 1872 (Section 10 & 73) and Transfer of Property Act 1882 (Section 107).
+4. STATUTORY CITATIONS & REGISTRATION COMPLIANCE:
+Grounded in ${citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`).join(', ')}. Registration requirements and stamp duty depend on local state law.
 
 5. CUSTOM AGREED TERMS:
 ${formData.customClauses.map((c, i) => `${i + 1}. ${c}`).join('\n')}
@@ -106,7 +100,7 @@ _____________________________                _____________________________
 LICENSOR                                     LICENSEE`;
     } else {
       draftText = `${formData.documentTitle.toUpperCase()}
-(Grounded in Indian Contract Act 1872 & IT Act 2000)
+(Grounded in ${citations.map(c => c.actShortTitle).join(', ')})
 
 THIS AGREEMENT is entered into at ${formData.city}, ${formData.state} on ${formData.effectiveDate}.
 
@@ -131,21 +125,21 @@ FIRST PARTY                                  SECOND PARTY`;
     }
 
     const plainSummary = `📌 PLAIN ENGLISH SUMMARY FOR SIGNING PARTIES:
-- Rent/Consideration: ${amountFormatted}/month
+- Rent/Consideration: ${amountFormatted}
 - Deposit: ${depositFormatted}
 - Lock-in Period: ${formData.lockInPeriodMonths || 0} months
 - Termination Notice: ${formData.noticePeriodDays} days written notice
-- Registration Status: ${formData.durationMonths > 11 ? 'Sub-Registrar Registration Required (>11 Mos)' : '11-Month Registration Exemption Applicable'}`;
+- Registration Note: Stamp duty and registration requirements depend on applicable state laws.`;
 
     const clauses: ClauseAnalysis[] = [
       {
         id: 'cl_1',
-        clauseTitle: '11-Month Tenure Exemption',
-        legaleseText: 'Whereas under Section 107 of the Transfer of Property Act 1882...',
-        plainLanguageText: 'Keeping agreement at 11 months saves mandatory registration costs under Indian law while remaining 100% legally enforceable.',
+        clauseTitle: 'Tenure & State Registration Compliance',
+        legaleseText: 'Governed by Section 107 of Transfer of Property Act 1882...',
+        plainLanguageText: `Agreed tenure of ${formData.durationMonths} months. Registration mandates depend on local state law.`,
         riskLevel: 'low',
-        riskExplanation: 'Standard legal structure in India.',
-        recommendation: 'Ensure e-Stamp paper of local state value is attached.',
+        riskExplanation: 'Standard legal tenure clause.',
+        recommendation: 'Attach e-Stamp paper as prescribed by local state rules.',
         saferAlternative: 'Keep tenure at 11 months with optional mutual renewal clause.',
         citation: citations[0]
       },
@@ -153,14 +147,16 @@ FIRST PARTY                                  SECOND PARTY`;
         id: 'cl_2',
         clauseTitle: 'Lock-in Period Commitment',
         legaleseText: 'Neither party shall be entitled to determine the license prior to the expiry of lock-in period...',
-        plainLanguageText: `If you leave before ${formData.lockInPeriodMonths || 6} months, rent until lock-in ends remains payable.`,
+        plainLanguageText: `If exited before ${formData.lockInPeriodMonths || 6} months, rent until lock-in ends remains payable.`,
         riskLevel: 'medium',
-        riskExplanation: 'Tenant faces financial liability if job or relocation changes suddenly.',
+        riskExplanation: 'Creates financial commitment if job or personal situation changes.',
         recommendation: 'Negotiate a shorter lock-in period (e.g. 3 months).',
         saferAlternative: 'Either party may terminate during lock-in period upon 30 days notice in case of official job transfer.',
         citation: citations[1] || citations[0]
       }
     ];
+
+    const dynamicRiskScore = LegalRAGEngine.calculateDynamicRiskScore(clauses);
 
     return {
       id: 'doc_' + Math.random().toString(36).substr(2, 9),
@@ -171,7 +167,7 @@ FIRST PARTY                                  SECOND PARTY`;
       draftText,
       plainSummaryText: plainSummary,
       clauses,
-      riskScore: validation.score >= 80 ? 92 : 75,
+      riskScore: dynamicRiskScore,
       completenessScore: validation.score,
       stampDutyRequired: stampInfo.rentAgreementRate,
       notarizationRequired: false,
@@ -215,7 +211,7 @@ FIRST PARTY                                  SECOND PARTY`;
       // Fallback
     }
 
-    const citations = LegalRAGEngine.retrieveRelevantStatutes(text, 2);
+    const citations = LegalRAGEngine.retrieveRelevantStatutes(text, undefined, 2);
     return {
       plainEnglishText: `💡 IN PLAIN ENGLISH:\nThis clause defines responsibilities between parties grounded in ${citations[0]?.actShortTitle || 'Indian Contract Act 1872'}.`,
       keyTermsExplained: [
