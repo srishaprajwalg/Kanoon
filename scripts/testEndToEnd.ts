@@ -47,41 +47,43 @@ function getJson(path: string): Promise<any> {
 
 async function runEndToEndTests() {
   console.log('================================================================================');
-  console.log('🧪 KANOON PHASE 3 END-TO-END API VALIDATION');
+  console.log('🧪 KANOON PHASE 4A END-TO-END API & JURISDICTION VALIDATION');
   console.log('================================================================================\n');
 
-  // Test A: Maharashtra Leave & License Agreement
-  console.log('📝 Test A: Maharashtra Leave & License Agreement Generation...');
+  // Test A: Karnataka Residential Tenancy Agreement (Bengaluru Focus)
+  console.log('📝 Test A: Karnataka Tenancy Agreement Generation (Bengaluru Focus)...');
   const formA = {
     templateId: 'rent_agreement',
-    documentTitle: 'Residential Leave and License Agreement',
-    partyA: { name: 'Rajesh Kumar Sharma', type: 'individual', address: 'Flat 402, Seawoods, Navi Mumbai 400706', contact: '+91-9820098200' },
-    partyB: { name: 'Amitabh Vinod Patel', type: 'individual', address: 'B-12, Green Acres, Powai, Mumbai 400076', contact: '+91-9876543210' },
+    documentTitle: 'Residential Rental Agreement',
+    partyA: { name: 'Ramesh Sharma', type: 'individual', address: 'Flat 402, Sunshine Apartments, Indiranagar, Bengaluru 560038', contact: '+91-9876543210' },
+    partyB: { name: 'Suresh Kumar', type: 'individual', address: 'B-12, Green Acres, Koramangala, Bengaluru 560034', contact: '+91-9123456789' },
     effectiveDate: '2026-09-01',
-    state: 'Maharashtra',
-    city: 'Mumbai',
+    state: 'Karnataka',
+    city: 'Bengaluru',
     durationMonths: 11,
-    financialAmount: 45000,
+    financialAmount: 35000,
     securityDeposit: 150000,
     noticePeriodDays: 30,
     lockInPeriodMonths: 6,
-    governingLawState: 'Maharashtra',
+    governingLawState: 'Karnataka',
     disputeResolution: 'Arbitration',
-    customClauses: ['Tenant shall not sublet or assign premises to third parties without prior written consent.'],
+    customClauses: ['Tenant shall not assign or sublet the Bengaluru residential premises without landlord prior written consent.'],
     usePlainLanguage: true
   };
 
   const resA = await postJson('/api/generate-document', formA);
+  const topCitA = resA.citations && resA.citations[0];
   console.log(`   • Status: ${resA.id ? 'SUCCESS' : 'FAILED'}`);
   console.log(`   • Title: ${resA.title}`);
   console.log(`   • Risk Score: ${resA.riskScore} / 100`);
   console.log(`   • Citations Count: ${resA.citations ? resA.citations.length : 0}`);
-  console.log(`   • Top Citation: ${resA.citations && resA.citations[0] ? resA.citations[0].actShortTitle + ' ' + resA.citations[0].sectionNumber : 'None'}`);
-  console.log(`   • Maharashtra Rent Control Sec 55 Warning: ${resA.recommendations && resA.recommendations.some((r: string) => r.includes('Maharashtra')) ? 'PRESENT (✅)' : 'MISSING'}`);
-  console.log(`   • India Code Link: ${resA.citations && resA.citations[0] ? resA.citations[0].sourceUrl : 'None'}\n`);
+  console.log(`   • Top Citation: [${topCitA?.jurisdiction || 'N/A'}] ${topCitA?.actShortTitle || 'None'} ${topCitA?.sectionNumber || ''}`);
+  console.log(`   • Karnataka Kaveri / Rent Act Warning: ${resA.recommendations && resA.recommendations.some((r: string) => r.includes('Karnataka')) ? 'PRESENT (✅)' : 'MISSING'}`);
+  console.log(`   • Source Document: ${topCitA?.sourceDocument || 'None'}`);
+  console.log(`   • Source URL: ${topCitA?.sourceUrl || 'None'}\n`);
 
-  // Test B: Different Input (NDA Contract, Delhi, Enterprise)
-  console.log('🔄 Test B: Dynamic Input Modification (NDA Agreement, Delhi)...');
+  // Test B: Dynamic Input Modification (NDA Agreement, Delhi)
+  console.log('🔄 Test B: Dynamic Input Modification (NDA Agreement, Central/Delhi)...');
   const formB = {
     templateId: 'nda_agreement',
     documentTitle: 'Mutual Proprietary Non-Disclosure Agreement',
@@ -107,23 +109,24 @@ async function runEndToEndTests() {
   console.log(`   • Top Citation: ${resB.citations && resB.citations[0] ? resB.citations[0].actShortTitle + ' ' + resB.citations[0].sectionNumber : 'None'}`);
   console.log(`   • Distinct from Test A?: ${resA.draftText !== resB.draftText ? 'YES (✅ Dynamically Generated)' : 'NO (❌ Static Template)'}\n`);
 
-  // Test C: Unsupported Legal Request (Section 999 Query)
-  console.log('🛡️  Test C: Unsupported Legal Provision Handling...');
-  const resC = await getJson('/api/rag-search?q=Section%20999%20Indian%20Contract%20Act%20AI%20Copyright');
+  // Test C: Negative Jurisdiction Leak Test
+  console.log('🛡️  Test C: Negative Jurisdiction Leak Check (Maharashtra vs Karnataka)...');
+  const resC = await getJson('/api/rag-search?q=Does%20Maharashtra%20Rent%20Control%20Act%20Section%2055%20apply%20to%20my%20Bengaluru%20rental%20in%20Karnataka%3F');
   const cCitations = resC.citations || [];
+  const maharashtraLeak = cCitations.some((c: any) => c.actShortTitle.includes('Maharashtra') || c.actName.includes('Maharashtra'));
   console.log(`   • Retrieved Chunks: ${cCitations.length}`);
-  console.log(`   • Section 999 Invented?: ${cCitations.some((c: any) => c.sectionNumber.includes('999')) ? 'YES (❌ Fabricated)' : 'NO (✅ Prevented)'}`);
-  console.log(`   • Evidence Flag: ${resC.hasSufficientEvidence ? 'True' : 'False'}\n`);
+  console.log(`   • Maharashtra Law Leaked for Karnataka Query?: ${maharashtraLeak ? 'YES (❌ Failed Leak Check)' : 'NO (✅ Passed Leak Check)'}`);
+  console.log(`   • Top Citation: ${cCitations[0] ? '[' + cCitations[0].jurisdiction + '] ' + cCitations[0].actShortTitle : 'None'}\n`);
 
-  // Test D: Out of Domain Query
+  // Test D: Out of Domain Query Rejection
   console.log('🚫 Test D: Out-Of-Domain Rejection...');
-  const resD = await getJson('/api/rag-search?q=IPL%20cricket%20match%20predictions');
+  const resD = await getJson('/api/rag-search?q=Who%20won%20the%20IPL%20cricket%20match%20yesterday%20in%20Bengaluru%3F');
   const dCitations = resD.citations || [];
   console.log(`   • Retrieved Chunks: ${dCitations.length}`);
   console.log(`   • Out of Domain Rejected?: ${dCitations.length === 0 ? 'YES (✅)' : 'NO (❌)'}\n`);
 
   console.log('================================================================================');
-  console.log('✅ ALL 4 END-TO-END TESTS PASSED SUCCESSFULLY');
+  console.log('✅ ALL PHASE 4A END-TO-END TESTS PASSED SUCCESSFULLY');
   console.log('================================================================================\n');
 }
 

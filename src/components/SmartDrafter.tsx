@@ -758,9 +758,16 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                             </a>
                           )}
                         </span>
-                        <div className="flex items-center space-x-1.5">
+                        <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                          <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border uppercase font-bold ${
+                            cit.jurisdiction === 'KARNATAKA' 
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                              : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                          }`}>
+                            📍 {cit.jurisdiction || 'CENTRAL'}
+                          </span>
                           {(cit.similarityScore !== undefined || cit.confidenceScore !== undefined) && (
-                            <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                            <span className="text-[10px] font-mono bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded border border-slate-700">
                               Similarity: {(cit.similarityScore || cit.confidenceScore || 0.85).toFixed(2)} | {cit.confidenceLevel || 'High'}
                             </span>
                           )}
@@ -781,19 +788,26 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                             <p className="text-[10.5px] leading-relaxed text-slate-300">{cit.whyThisClause}</p>
                           </div>
                         )}
-                        <div className="flex items-center justify-between pt-0.5">
+                        <div className="flex items-center justify-between pt-0.5 flex-wrap gap-1">
                           <span className="text-amber-400/90 font-mono">📌 {cit.relevanceExplanation}</span>
-                          {cit.sourceUrl && (
-                            <a
-                              href={cit.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-slate-400 hover:text-amber-300 underline font-mono flex items-center space-x-0.5"
-                            >
-                              <span>India Code</span>
-                              <ExternalLink className="w-2.5 h-2.5" />
-                            </a>
-                          )}
+                          <div className="flex items-center space-x-2">
+                            {cit.sourceTier && (
+                              <span className="text-[9px] font-mono text-slate-400 bg-slate-800 px-1 rounded">
+                                {cit.sourceTier}
+                              </span>
+                            )}
+                            {cit.sourceUrl && (
+                              <a
+                                href={cit.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-amber-400 hover:text-amber-300 underline font-mono flex items-center space-x-0.5 text-[10.5px]"
+                              >
+                                <span>{cit.jurisdiction === 'KARNATAKA' ? 'Karnataka Govt' : 'India Code'}</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

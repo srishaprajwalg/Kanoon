@@ -65,6 +65,8 @@ export interface LegalStatuteCitation {
   confidenceLevel?: 'High' | 'Medium' | 'Low';
   evidenceStrength?: 'Strong' | 'Moderate' | 'Weak';
   whyThisClause?: string; // Metadata-derived retrieval rationale
+  sourceTier?: string; // e.g. Tier 1 (Official Government), Tier 2 (Official Gazette)
+  sourceDocument?: string;
 }
 
 export interface ClauseAnalysis {
