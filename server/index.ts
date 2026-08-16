@@ -25,7 +25,10 @@ app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
     aiConnected: Boolean(aiClient),
-    ragEngine: 'India Code Production Vector RAG Engine v2.5',
+    ragEngine: 'India Code Grounded Vector RAG Engine',
+    embeddingModel: LegalRAGEngine.EMBEDDING_MODEL_NAME,
+    vectorDimensionality: LegalRAGEngine.EMBEDDING_DIMENSIONALITY,
+    retrievalAlgorithm: LegalRAGEngine.RETRIEVAL_ALGORITHM,
     timestamp: new Date().toISOString()
   });
 });
@@ -46,12 +49,12 @@ app.post('/api/validate-inputs', (req, res) => {
 /**
  * RAG Legal Citation Retrieval Endpoint
  */
-app.get('/api/rag-search', (req, res) => {
+app.get('/api/rag-search', async (req, res) => {
   const query = (req.query.q as string) || '';
   const templateId = (req.query.templateId as string) || undefined;
   const minScore = req.query.minScore ? parseFloat(req.query.minScore as string) : LegalRAGEngine.MIN_CONFIDENCE_THRESHOLD;
 
-  const citations = LegalRAGEngine.retrieveRelevantStatutes(query, templateId, 5, minScore);
+  const citations = await LegalRAGEngine.retrieveRelevantStatutesAsync(query, templateId, 5, minScore);
   const hasSufficientEvidence = citations.length > 0;
 
   res.json({
@@ -74,8 +77,8 @@ app.post('/api/generate-document', async (req, res) => {
     // 1. Run Pre-generation Validation
     const validation = LegalRAGEngine.validateDocumentInputs(formData);
 
-    // 2. Document-Type Aware RAG Retrieval: fetch relevant legal statutory chunks
-    const citations: LegalStatuteCitation[] = LegalRAGEngine.retrieveCitationsForDocument(formData);
+    // 2. Document-Type Aware RAG Retrieval: fetch relevant legal statutory chunks using 384D dense embeddings
+    const citations: LegalStatuteCitation[] = await LegalRAGEngine.retrieveCitationsForDocumentAsync(formData);
     const hasSufficientEvidence = validation.hasSufficientEvidence ?? (citations.length > 0);
     const evidenceWarning = validation.evidenceWarning;
 
@@ -271,6 +274,7 @@ FIRST PARTY                                  SECOND PARTY`;
       legalActReferences: citations.map(c => `${c.actShortTitle} (${c.sectionNumber})`),
       citations,
       validationWarnings: validation.missingFields,
+      recommendations: validation.recommendations,
       disclaimer: 'DISCLAIMER: Kanoon AI is an automated legal documentation assistant. Documents generated are AI-assisted drafts for informational purposes under Indian law and do not constitute formal attorney-client legal advice.',
       hasSufficientEvidence,
       evidenceWarning
@@ -389,6 +393,9 @@ Respond strictly with valid JSON with keys:
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`⚖️ Kanoon AI Backend API Server running on http://localhost:${PORT}`);
+LegalRAGEngine.initializeCorpus().then(() => {
+  app.listen(PORT, () => {
+    console.log(`⚖️ Kanoon AI Backend API Server running on http://localhost:${PORT}`);
+    console.log(`🧠 Dense Embedding Model: ${LegalRAGEngine.EMBEDDING_MODEL_NAME} (${LegalRAGEngine.EMBEDDING_DIMENSIONALITY}-D Dense Vector Embeddings)`);
+  });
 });

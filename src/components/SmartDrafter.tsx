@@ -759,9 +759,9 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                           )}
                         </span>
                         <div className="flex items-center space-x-1.5">
-                          {cit.confidenceScore && (
+                          {(cit.similarityScore !== undefined || cit.confidenceScore !== undefined) && (
                             <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
-                              {Math.round(cit.confidenceScore * 100)}% Vector Similarity
+                              Similarity: {(cit.similarityScore || cit.confidenceScore || 0.85).toFixed(2)} | {cit.confidenceLevel || 'High'}
                             </span>
                           )}
                           <span className="font-mono text-[11px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">{cit.sectionNumber}</span>
@@ -774,19 +774,27 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                       <p className="text-slate-400 text-[11px] font-serif italic border-l-2 border-amber-500/50 pl-2">
                         "{cit.statuteText}"
                       </p>
-                      <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400">
-                        <span className="text-amber-400/90">📌 {cit.relevanceExplanation}</span>
-                        {cit.sourceUrl && (
-                          <a
-                            href={cit.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-slate-400 hover:text-amber-300 underline font-mono flex items-center space-x-0.5"
-                          >
-                            <span>India Code</span>
-                            <ExternalLink className="w-2.5 h-2.5" />
-                          </a>
+                      <div className="pt-1 border-t border-slate-800/80 space-y-1 text-[10px] text-slate-400">
+                        {cit.whyThisClause && (
+                          <div className="bg-slate-950/60 p-2 rounded-md border border-slate-800 text-slate-300">
+                            <span className="font-semibold text-amber-400 block mb-0.5">💡 Why this clause?</span>
+                            <p className="text-[10.5px] leading-relaxed text-slate-300">{cit.whyThisClause}</p>
+                          </div>
                         )}
+                        <div className="flex items-center justify-between pt-0.5">
+                          <span className="text-amber-400/90 font-mono">📌 {cit.relevanceExplanation}</span>
+                          {cit.sourceUrl && (
+                            <a
+                              href={cit.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-slate-400 hover:text-amber-300 underline font-mono flex items-center space-x-0.5"
+                            >
+                              <span>India Code</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

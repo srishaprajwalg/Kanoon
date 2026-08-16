@@ -60,7 +60,11 @@ export interface LegalStatuteCitation {
   jurisdiction?: string;
   sourceUrl?: string; // India Code Official URI
   effectiveDate?: string;
-  confidenceScore?: number; // 0.0 to 1.0 (vector cosine similarity / TF-IDF score)
+  confidenceScore?: number; // 0.0 to 1.0
+  similarityScore?: number; // Cosine similarity score (e.g. 0.87)
+  confidenceLevel?: 'High' | 'Medium' | 'Low';
+  evidenceStrength?: 'Strong' | 'Moderate' | 'Weak';
+  whyThisClause?: string; // Metadata-derived retrieval rationale
 }
 
 export interface ClauseAnalysis {

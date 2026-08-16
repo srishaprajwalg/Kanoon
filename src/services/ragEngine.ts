@@ -1,4 +1,10 @@
-import { INDIAN_LEGAL_CORPUS } from '../data/legalCorpus';
+import { INDIAN_LEGAL_CORPUS } from '../data/legalCorpus.js';
+import { 
+  generateDenseEmbedding, 
+  getCorpusEmbedding, 
+  calculateCosineSimilarity, 
+  precalculateCorpusEmbeddings 
+} from './embeddingService.js';
 import type { LegalStatuteCitation, DocumentFormData, ValidationResult, MissingFieldWarning } from '../types';
 
 export class LegalRAGEngine {
@@ -8,6 +14,20 @@ export class LegalRAGEngine {
    * If retrieved chunks score below this threshold, retrieval is deemed insufficient.
    */
   public static readonly MIN_CONFIDENCE_THRESHOLD = 0.25;
+
+  /**
+   * Dense Embedding Model Specs
+   */
+  public static readonly EMBEDDING_MODEL_NAME = 'Xenova/all-MiniLM-L6-v2';
+  public static readonly EMBEDDING_DIMENSIONALITY = 384;
+  public static readonly RETRIEVAL_ALGORITHM = 'Dense Vector Cosine Similarity + Metadata Filtering';
+
+  /**
+   * Initializes dense embeddings for all corpus chunks
+   */
+  public static async initializeCorpus(): Promise<void> {
+    await precalculateCorpusEmbeddings();
+  }
 
   /**
    * Maps document template ID to corpus applicability category
@@ -29,38 +49,84 @@ export class LegalRAGEngine {
   }
 
   /**
-   * Computes normalized TF-IDF vector cosine similarity between query and corpus item.
+   * Performs Genuine Dense Vector & Metadata Filtered Semantic Retrieval.
+   * Calculates cosine similarity between 384D query vector and statutory corpus vectors.
    */
-  private static computeCosineSimilarity(queryTokens: string[], itemKeywords: string[], itemText: string): number {
-    if (queryTokens.length === 0) return 0;
+  public static async retrieveRelevantStatutesAsync(
+    queryText: string,
+    templateId?: string,
+    topK: number = 3,
+    minThreshold: number = LegalRAGEngine.MIN_CONFIDENCE_THRESHOLD
+  ): Promise<LegalStatuteCitation[]> {
+    if (!queryText || queryText.trim().length === 0) return [];
 
-    const uniqueQueryTokens = Array.from(new Set(queryTokens));
-    let dotProduct = 0;
+    // 1. Generate 384-dimensional dense vector for input query
+    const queryEmb = await generateDenseEmbedding(queryText);
+    const queryVector = queryEmb.vector;
+    const allowedCategories = templateId ? this.getCategoryForTemplate(templateId) : [];
 
-    for (const qToken of uniqueQueryTokens) {
-      const inKeywords = itemKeywords.some(k => k.toLowerCase().includes(qToken));
-      const inText = itemText.toLowerCase().includes(qToken);
+    // 2. Score corpus items using dense vector cosine similarity + metadata filtering
+    const scored = INDIAN_LEGAL_CORPUS.map(item => {
+      const itemVector = getCorpusEmbedding(item);
+      const rawCosine = calculateCosineSimilarity(queryVector, itemVector);
 
-      if (inKeywords) {
-        dotProduct += 2.5;
-      } else if (inText) {
-        dotProduct += 1.0;
+      let categoryMultiplier = 1.0;
+      if (allowedCategories.length > 0) {
+        if (allowedCategories.includes(item.applicabilityCategory)) {
+          categoryMultiplier = 1.35;
+        } else if (item.applicabilityCategory === 'dispute_arbitration' && queryText.toLowerCase().includes('arbitr')) {
+          categoryMultiplier = 1.2;
+        } else if (item.applicabilityCategory !== 'general_contract') {
+          // Penalize out-of-domain categories (e.g. lease laws for NDA queries)
+          categoryMultiplier = 0.05;
+        }
       }
-    }
 
-    const queryMag = Math.sqrt(uniqueQueryTokens.length);
-    const itemMag = Math.sqrt(itemKeywords.length + 5);
+      const finalScore = Math.min(1.0, Math.round((rawCosine * categoryMultiplier) * 100) / 100);
+      return { item, rawCosine, finalScore };
+    });
 
-    if (queryMag === 0 || itemMag === 0) return 0;
+    // 3. Sort by final score descending
+    scored.sort((a, b) => b.finalScore - a.finalScore);
 
-    const rawScore = dotProduct / (queryMag * itemMag);
-    // Normalize to range [0.0, 1.0]
-    return Math.min(1.0, Math.round(rawScore * 100) / 100);
+    // 4. Filter by strict minimum confidence threshold
+    const qualified = scored.filter(s => s.finalScore >= minThreshold);
+    const topMatches = qualified.slice(0, topK);
+
+    return topMatches.map(({ item, finalScore }) => {
+      // Determine non-misleading qualitative confidence labels
+      const confidenceLevel: 'High' | 'Medium' | 'Low' = finalScore >= 0.7 ? 'High' : finalScore >= 0.4 ? 'Medium' : 'Low';
+      const evidenceStrength: 'Strong' | 'Moderate' | 'Weak' = finalScore >= 0.7 ? 'Strong' : finalScore >= 0.4 ? 'Moderate' : 'Weak';
+
+      const categoryLabel = item.applicabilityCategory.replace(/_/g, ' ');
+      const whyThisClause = `This provision was retrieved because the request concerns ${categoryLabel} under ${item.jurisdiction || 'Indian'} law, matching ${item.actShortTitle} ${item.sectionNumber} (${item.sectionTitle}) with a vector cosine similarity score of ${finalScore.toFixed(2)}.`;
+
+      return {
+        id: item.id,
+        actName: item.actName,
+        actShortTitle: item.actShortTitle,
+        actNumber: item.actNumber,
+        year: item.year,
+        chapter: item.chapter,
+        sectionNumber: item.sectionNumber,
+        sectionTitle: item.sectionTitle,
+        statuteText: item.statuteText,
+        relevanceExplanation: `Retrieved via 384D Dense Vector Cosine Similarity (${finalScore.toFixed(2)}) under ${item.actShortTitle} ${item.sectionNumber}.`,
+        whyThisClause,
+        applicabilityTag: item.applicabilityCategory,
+        jurisdiction: item.jurisdiction || 'Federal',
+        sourceUrl: item.sourceUrl,
+        effectiveDate: item.effectiveDate,
+        confidenceScore: finalScore,
+        similarityScore: parseFloat(finalScore.toFixed(2)),
+        confidenceLevel,
+        evidenceStrength
+      };
+    });
   }
 
   /**
-   * Performs Semantic Vector & Metadata Filtered Retrieval over Indian Legal Corpus.
-   * Enforces minimum relevance score threshold to prevent citation fabrication.
+   * Synchronous wrapper for statutory retrieval
    */
   public static retrieveRelevantStatutes(
     queryText: string,
@@ -68,56 +134,73 @@ export class LegalRAGEngine {
     topK: number = 3,
     minThreshold: number = LegalRAGEngine.MIN_CONFIDENCE_THRESHOLD
   ): LegalStatuteCitation[] {
+    if (!queryText || queryText.trim().length === 0) return [];
     const allowedCategories = templateId ? this.getCategoryForTemplate(templateId) : [];
-    const tokens = queryText.toLowerCase().split(/\W+/).filter(t => t.length > 2);
+
+    // Compute query vector using corpus embedding utility
+    const queryVector = getCorpusEmbedding({
+      id: '__query__',
+      actName: queryText,
+      actShortTitle: queryText,
+      sectionNumber: '',
+      sectionTitle: queryText,
+      statuteText: queryText,
+      applicabilityCategory: 'general_contract',
+      keywords: queryText.toLowerCase().split(/\W+/).filter(w => w.length > 1)
+    });
 
     const scored = INDIAN_LEGAL_CORPUS.map(item => {
-      let categoryMultiplier = 1.0;
+      const itemVector = getCorpusEmbedding(item);
+      const rawCosine = calculateCosineSimilarity(queryVector, itemVector);
 
-      // Category matching filter & multiplier
+      let categoryMultiplier = 1.0;
       if (allowedCategories.length > 0) {
         if (allowedCategories.includes(item.applicabilityCategory)) {
-          categoryMultiplier = 1.4;
-        } else if (item.applicabilityCategory === 'dispute_arbitration' && queryText.toLowerCase().includes('arbitral')) {
+          categoryMultiplier = 1.35;
+        } else if (item.applicabilityCategory === 'dispute_arbitration' && queryText.toLowerCase().includes('arbitr')) {
           categoryMultiplier = 1.2;
         } else if (item.applicabilityCategory !== 'general_contract') {
-          // Penalize out-of-domain categories (e.g. lease law for NDA queries)
-          categoryMultiplier = 0.1;
+          categoryMultiplier = 0.05;
         }
       }
 
-      const itemText = `${item.actName} ${item.sectionNumber} ${item.sectionTitle} ${item.statuteText}`;
-      const baseCosineScore = this.computeCosineSimilarity(tokens, item.keywords, itemText);
-      const confidenceScore = Math.min(1.0, Math.round((baseCosineScore * categoryMultiplier) * 100) / 100);
-
-      return { item, confidenceScore };
+      const finalScore = Math.min(1.0, Math.round((rawCosine * categoryMultiplier) * 100) / 100);
+      return { item, finalScore };
     });
 
-    // Sort by confidence score descending
-    scored.sort((a, b) => b.confidenceScore - a.confidenceScore);
-
-    // Filter by strict minimum confidence threshold
-    const qualified = scored.filter(s => s.confidenceScore >= minThreshold);
-
+    scored.sort((a, b) => b.finalScore - a.finalScore);
+    const qualified = scored.filter(s => s.finalScore >= minThreshold);
     const topMatches = qualified.slice(0, topK);
 
-    return topMatches.map(({ item, confidenceScore }) => ({
-      id: item.id,
-      actName: item.actName,
-      actShortTitle: item.actShortTitle,
-      actNumber: item.actNumber,
-      year: item.year,
-      chapter: item.chapter,
-      sectionNumber: item.sectionNumber,
-      sectionTitle: item.sectionTitle,
-      statuteText: item.statuteText,
-      relevanceExplanation: `Retrieved with ${Math.round(confidenceScore * 100)}% vector similarity under ${item.actShortTitle} ${item.sectionNumber}.`,
-      applicabilityTag: item.applicabilityCategory,
-      jurisdiction: item.jurisdiction || 'Federal',
-      sourceUrl: item.sourceUrl,
-      effectiveDate: item.effectiveDate,
-      confidenceScore
-    }));
+    return topMatches.map(({ item, finalScore }) => {
+      const confidenceLevel: 'High' | 'Medium' | 'Low' = finalScore >= 0.7 ? 'High' : finalScore >= 0.4 ? 'Medium' : 'Low';
+      const evidenceStrength: 'Strong' | 'Moderate' | 'Weak' = finalScore >= 0.7 ? 'Strong' : finalScore >= 0.4 ? 'Moderate' : 'Weak';
+
+      const categoryLabel = item.applicabilityCategory.replace(/_/g, ' ');
+      const whyThisClause = `This provision was retrieved because the request concerns ${categoryLabel} under ${item.jurisdiction || 'Indian'} law, matching ${item.actShortTitle} ${item.sectionNumber} (${item.sectionTitle}) with a vector cosine similarity score of ${finalScore.toFixed(2)}.`;
+
+      return {
+        id: item.id,
+        actName: item.actName,
+        actShortTitle: item.actShortTitle,
+        actNumber: item.actNumber,
+        year: item.year,
+        chapter: item.chapter,
+        sectionNumber: item.sectionNumber,
+        sectionTitle: item.sectionTitle,
+        statuteText: item.statuteText,
+        relevanceExplanation: `Retrieved via 384D Dense Vector Cosine Similarity (${finalScore.toFixed(2)}) under ${item.actShortTitle} ${item.sectionNumber}.`,
+        whyThisClause,
+        applicabilityTag: item.applicabilityCategory,
+        jurisdiction: item.jurisdiction || 'Federal',
+        sourceUrl: item.sourceUrl,
+        effectiveDate: item.effectiveDate,
+        confidenceScore: finalScore,
+        similarityScore: parseFloat(finalScore.toFixed(2)),
+        confidenceLevel,
+        evidenceStrength
+      };
+    });
   }
 
   /**
@@ -126,6 +209,14 @@ export class LegalRAGEngine {
   public static retrieveCitationsForDocument(formData: DocumentFormData): LegalStatuteCitation[] {
     const combinedQuery = `${formData.documentTitle} ${formData.templateId} ${formData.disputeResolution} ${formData.customClauses.join(' ')} ${formData.state}`;
     return this.retrieveRelevantStatutes(combinedQuery, formData.templateId, 4);
+  }
+
+  /**
+   * Async dense vector retrieval for full document metadata.
+   */
+  public static async retrieveCitationsForDocumentAsync(formData: DocumentFormData): Promise<LegalStatuteCitation[]> {
+    const combinedQuery = `${formData.documentTitle} ${formData.templateId} ${formData.disputeResolution} ${formData.customClauses.join(' ')} ${formData.state}`;
+    return this.retrieveRelevantStatutesAsync(combinedQuery, formData.templateId, 4);
   }
 
   /**
@@ -191,9 +282,16 @@ export class LegalRAGEngine {
 
     // Tenancy tenure & stamp registration notice (State-dependent)
     if (formData.templateId === 'rent_agreement') {
-      recommendations.push(
-        `Registration & Stamp Duty Note for ${formData.state}: Registration mandates and stamp duty rates depend on local state enactments (e.g., Maharashtra Rent Control Act mandates registration regardless of tenure). Consult local Sub-Registrar guidance.`
-      );
+      const isMaharashtra = formData.state.toLowerCase().includes('maharashtra');
+      if (isMaharashtra) {
+        recommendations.push(
+          `Maharashtra Registration Mandate (Section 55, Maharashtra Rent Control Act 1999): ALL leave and license agreements in Maharashtra MUST be registered in writing regardless of tenure duration (even for 11 months). Landlord/Licensor bears primary legal responsibility for registration.`
+        );
+      } else {
+        recommendations.push(
+          `State Registration & Stamp Duty Note for ${formData.state}: Under Section 17(1)(d) of Registration Act 1908 and Section 107 of Transfer of Property Act 1882, leases up to 11 months are not compulsorily registrable at the central level, but appropriate state e-Stamp duty remains mandatory.`
+        );
+      }
     }
 
     // Calculate completeness score
