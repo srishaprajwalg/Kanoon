@@ -85,7 +85,7 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Act No. 4 of 1882',
     year: 1882,
     jurisdiction: 'CENTRAL',
-    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/2338',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/14648',
     sourceDomain: 'www.indiacode.nic.in',
     category: 'lease_tenancy'
   },
@@ -105,7 +105,7 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Act No. 47 of 1963',
     year: 1963,
     jurisdiction: 'CENTRAL',
-    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/2201',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/1583',
     sourceDomain: 'www.indiacode.nic.in',
     category: 'general_contract'
   },
@@ -115,7 +115,7 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Act No. 26 of 1996',
     year: 1996,
     jurisdiction: 'CENTRAL',
-    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/1978',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/21922',
     sourceDomain: 'www.indiacode.nic.in',
     category: 'dispute_arbitration'
   },
@@ -125,7 +125,7 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Act No. 21 of 2000',
     year: 2000,
     jurisdiction: 'CENTRAL',
-    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/1999',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/13116',
     sourceDomain: 'www.indiacode.nic.in',
     category: 'confidentiality_nda'
   },
@@ -135,7 +135,7 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Act No. 35 of 2019',
     year: 2019,
     jurisdiction: 'CENTRAL',
-    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/15256',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/16939',
     sourceDomain: 'www.indiacode.nic.in',
     category: 'consumer_rights'
   },
@@ -145,7 +145,7 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Act No. 4 of 2016',
     year: 2015,
     jurisdiction: 'CENTRAL',
-    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/2157',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/2156',
     sourceDomain: 'www.indiacode.nic.in',
     category: 'dispute_arbitration'
   },
@@ -155,8 +155,8 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Karnataka Act 34 of 2001',
     year: 1999,
     jurisdiction: 'KARNATAKA',
-    sourceUrl: 'https://dpar.karnataka.gov.in/storage/pdf-files/Acts/Karnataka_Rent_Act_1999.pdf',
-    sourceDomain: 'dpar.karnataka.gov.in',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/7810',
+    sourceDomain: 'www.indiacode.nic.in',
     category: 'lease_tenancy'
   },
   'karnataka_stamp_act_1957.pdf': {
@@ -165,8 +165,8 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Karnataka Act 34 of 1957',
     year: 1957,
     jurisdiction: 'KARNATAKA',
-    sourceUrl: 'https://dpar.karnataka.gov.in/storage/pdf-files/Acts/Karnataka_Stamp_Act_1957.pdf',
-    sourceDomain: 'dpar.karnataka.gov.in',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/7744',
+    sourceDomain: 'www.indiacode.nic.in',
     category: 'lease_tenancy'
   },
   'karnataka_shops_and_commercial_establishments_act_1961.pdf': {
@@ -175,8 +175,8 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Karnataka Act 8 of 1962',
     year: 1961,
     jurisdiction: 'KARNATAKA',
-    sourceUrl: 'https://dpar.karnataka.gov.in/storage/pdf-files/Acts/Karnataka_Shops_Act_1961.pdf',
-    sourceDomain: 'dpar.karnataka.gov.in',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/7609?view_type=browse',
+    sourceDomain: 'www.indiacode.nic.in',
     category: 'employment_service'
   },
   'karnataka_land_revenue_act_1964.pdf': {
@@ -185,8 +185,8 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Karnataka Act 12 of 1964',
     year: 1964,
     jurisdiction: 'KARNATAKA',
-    sourceUrl: 'https://dpar.karnataka.gov.in/storage/pdf-files/Acts/Karnataka_Land_Revenue_Act_1964.pdf',
-    sourceDomain: 'dpar.karnataka.gov.in',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/2485',
+    sourceDomain: 'www.indiacode.nic.in',
     category: 'lease_tenancy'
   },
   'karnataka_transparency_in_public_procurements_act_1999.pdf': {
@@ -195,8 +195,8 @@ const ACT_METADATA_MAP: Record<string, {
     actNumber: 'Karnataka Act 14 of 2000',
     year: 1999,
     jurisdiction: 'KARNATAKA',
-    sourceUrl: 'https://dpar.karnataka.gov.in/storage/pdf-files/Acts/Karnataka_Procurement_Act_1999.pdf',
-    sourceDomain: 'dpar.karnataka.gov.in',
+    sourceUrl: 'https://www.indiacode.nic.in/handle/123456789/7000?view_type=browse',
+    sourceDomain: 'www.indiacode.nic.in',
     category: 'general_contract'
   }
 };
