@@ -1,4 +1,4 @@
-export type ActiveTab = 'drafter' | 'review' | 'simplifier' | 'chatbot' | 'database' | 'experts' | 'presentation';
+export type ActiveTab = 'drafter' | 'review' | 'simplifier' | 'chatbot' | 'database' | 'experts';
 
 export interface LegalParty {
   name: string;

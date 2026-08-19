@@ -237,7 +237,7 @@ INSTRUCTIONS:
 4. Output clean plain text formatted with numbered sections.`;
 
         const response = await aiClient.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.5-flash-lite',
           contents: prompt
         });
 
@@ -638,12 +638,14 @@ Respond strictly with valid JSON with keys:
 - "saferAlternative": (string - balanced alternative clause protecting both parties)`;
 
         const response = await aiClient.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.5-flash-lite',
           contents: prompt
         });
 
-        const responseText = response.text || '';
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        // Strip markdown code fences (```json ... ```) that Gemini sometimes wraps around JSON
+        const rawText = response.text || '';
+        const strippedText = rawText.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '');
+        const jsonMatch = strippedText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           plainExplanation = parsed.plainExplanation || '';
@@ -660,12 +662,12 @@ Respond strictly with valid JSON with keys:
     if (!plainExplanation) {
       const lower = clauseText.toLowerCase();
 
-      if (lower.includes('indemnify') && !lower.includes('limited to')) {
+      if (lower.includes('indemnify') || lower.includes('hold harmless')) {
         riskLevel = 'high';
-        riskExplanation = 'Unlimited Indemnity Trap: Uncapped promise to cover all losses, claims, and third-party damages.';
-        plainExplanation = 'You promise to pay all damages and legal costs incurred by the other party without any upper limit.';
-        saferAlternative = 'Add a liability cap: "Total indemnity obligation under this agreement shall be capped at the total consideration paid in the preceding 6 months."';
-      } else if (lower.includes('terminate at sole discretion') || lower.includes('without notice')) {
+        riskExplanation = 'Indemnity / Hold Harmless: This clause requires one party to absorb all claims, losses, and damages of the other, which can be financially unlimited.';
+        plainExplanation = 'You are agreeing to protect the other party from any and all legal claims and financial losses — even those caused by them. This is an unusually broad obligation.';
+        saferAlternative = 'Add a cap: "Indemnity obligations are limited to direct damages not exceeding the total consideration paid under this agreement."';
+      } else if (lower.includes('terminate at sole discretion') || lower.includes('without notice') || lower.includes('without prior notice')) {
         riskLevel = 'critical';
         riskExplanation = 'Unilateral Immediate Exit: Other party can cancel instantly without warning or opportunity to cure.';
         plainExplanation = 'The other party can terminate this agreement at any moment without prior written notice.';
@@ -675,11 +677,24 @@ Respond strictly with valid JSON with keys:
         riskExplanation = 'Restraint of Trade: Blanket non-compete clauses post-termination are void under Section 27 of Indian Contract Act 1872.';
         plainExplanation = 'Restricts your freedom to work or engage in competing business after contract ends.';
         saferAlternative = 'Narrow scope: "Non-compete applies strictly to soliciting existing company clients for a period of 6 months post-exit."';
+      } else if (lower.includes('confidential') || lower.includes('disclose') || lower.includes('non-disclosure')) {
+        riskLevel = 'medium';
+        riskExplanation = 'Confidentiality Obligation: Parties are restricted from sharing information covered under this clause. Violation can lead to injunction or damages.';
+        plainExplanation = 'This clause prohibits sharing specified information with anyone outside the agreement. You are legally bound to keep this information secret.';
+        saferAlternative = 'Limit scope: "Confidentiality obligations apply only to information expressly marked Confidential and do not cover information already in the public domain."';
+      } else if (lower.includes('pay') || lower.includes('rent') || lower.includes('fee') || lower.includes('consideration')) {
+        riskLevel = 'low';
+        const citationRef = citations[0] ? `as governed by ${citations[0].actShortTitle} ${citations[0].sectionNumber}` : 'under Indian Contract Act 1872';
+        riskExplanation = `Payment Obligation: A financial obligation is imposed on one party ${citationRef}. Late payment may attract penalties or termination rights.`;
+        plainExplanation = `This clause requires a party to make a specified payment by a defined deadline. Failure to pay on time may constitute a breach of contract ${citationRef}.`;
+        saferAlternative = 'Add a cure period: "In case of delayed payment, the defaulting party shall have 7 days from written notice to remedy the breach before the agreement is deemed terminated."';
       } else {
         riskLevel = 'low';
-        riskExplanation = 'Standard contractual clause without immediate high-risk red flags detected.';
-        plainExplanation = 'Defines standard rights and responsibilities between both parties under Indian law.';
-        saferAlternative = clauseText;
+        const clausePreview = clauseText.length > 120 ? clauseText.substring(0, 120) + '...' : clauseText;
+        const citationRef = citations[0] ? `under ${citations[0].actShortTitle} ${citations[0].sectionNumber}` : 'under Indian law';
+        riskExplanation = `Contractual Obligation: The clause "${clausePreview}" imposes binding duties on one or both parties ${citationRef}.`;
+        plainExplanation = `This clause sets out a specific legal obligation. It is binding on the parties ${citationRef}. Review carefully to ensure the terms are fair and the obligations are within your ability to perform.`;
+        saferAlternative = 'Ensure this clause is accompanied by clear definitions of what constitutes a breach and what remedies are available to each party.';
       }
     }
 

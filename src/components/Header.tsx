@@ -1,19 +1,15 @@
 import React from 'react';
 import type { ActiveTab } from '../types';
-import { Scale, FileText, Sparkles, BookOpen, UserCheck, Key, Shield, Presentation, FileSearch } from 'lucide-react';
+import { Scale, FileText, Sparkles, BookOpen, UserCheck, Shield, FileSearch } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
-  onOpenApiKeyModal: () => void;
-  hasApiKey: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
-  onOpenApiKeyModal,
-  hasApiKey,
 }) => {
   return (
     <header className="sticky top-0 z-40 glass-panel border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
@@ -96,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <BookOpen className="w-4 h-4" />
-              <span>Legal DB & Stamp Duty</span>
+              <span>Legal DB &amp; Stamp Duty</span>
             </button>
 
             <button
@@ -110,35 +106,10 @@ export const Header: React.FC<HeaderProps> = ({
               <UserCheck className="w-4 h-4" />
               <span>Legal Advice Hub</span>
             </button>
-
-            <button
-              onClick={() => setActiveTab('presentation')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'presentation'
-                  ? 'bg-amber-500 text-slate-950 font-semibold shadow-md shadow-amber-500/20'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Presentation className="w-4 h-4" />
-              <span>Hackathon Presentation</span>
-            </button>
           </nav>
 
-          {/* Right Action Tools */}
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={onOpenApiKeyModal}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                hasApiKey
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                  : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
-              }`}
-              title="Configure Google Gemini API Key"
-            >
-              <Key className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{hasApiKey ? 'Gemini AI Ready' : 'Set Gemini Key'}</span>
-            </button>
-
+          {/* Right: DPDP badge only */}
+          <div className="flex items-center">
             <div className="hidden lg:flex items-center space-x-1 text-slate-400 text-xs px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800">
               <Shield className="w-3.5 h-3.5 text-amber-400" />
               <span>DPDP Compliant</span>
@@ -178,14 +149,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <UserCheck className="w-4 h-4 mb-0.5" />
             <span>Experts</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('presentation')}
-            className={`flex flex-col items-center py-1 px-2 ${activeTab === 'presentation' ? 'text-amber-400 font-bold' : 'text-slate-400'}`}
-          >
-            <Presentation className="w-4 h-4 mb-0.5" />
-            <span>Slides</span>
           </button>
         </div>
       </div>
