@@ -221,12 +221,17 @@ export function enrichCitationWithOfficialProvenance<T extends Record<string, an
   });
 
   if (entry) {
+    const localPdfUrl = entry.sourcePdfFilename 
+      ? `http://localhost:5000/api/statutes/${entry.sourcePdfFilename}`
+      : undefined;
+
     return {
       ...cit,
-      sourceUrl: cit.sourceUrl || entry.sourceUrl,
-      pdfUrl: cit.pdfUrl || entry.pdfUrl,
-      sourcePdfFilename: cit.sourcePdfFilename || entry.sourcePdfFilename,
-      sha256: cit.sha256 || entry.sha256
+      sourceUrl: localPdfUrl || entry.sourceUrl || cit.sourceUrl,
+      pdfUrl: localPdfUrl || entry.pdfUrl || cit.pdfUrl,
+      sourceDomain: 'Local Kanoon PDF Repository',
+      sourcePdfFilename: entry.sourcePdfFilename || cit.sourcePdfFilename,
+      sha256: entry.sha256 || cit.sha256
     };
   }
 

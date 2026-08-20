@@ -8,6 +8,9 @@ import { STAMP_DUTY_GUIDE } from '../src/data/stampDutyData.js';
 
 import { extractDocumentContent } from '../src/services/documentExtractor.js';
 import { performFullDocumentReview } from '../src/services/documentReviewer.js';
+import { STATUTORY_SOURCE_REGISTRY } from '../src/data/statutoryRegistry.js';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -20,6 +23,30 @@ app.use(express.json({ limit: '15mb' }));
 // Initialize Google Gemini AI client securely on backend
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
 const aiClient = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+/**
+ * Statutory PDF Serving Endpoint
+ * Only serves known, verified PDFs from corpus/raw mapped in the registry
+ */
+app.get('/api/statutes/:filename', (req, res) => {
+  const filename = req.params.filename;
+  
+  // Security check: Only allow access to known PDFs defined in the registry
+  if (!filename || typeof filename !== 'string' || !STATUTORY_SOURCE_REGISTRY[filename]) {
+    return res.status(403).json({ error: 'Access denied: Statute PDF not found in official registry' });
+  }
+
+  const filePath = path.join(process.cwd(), 'corpus', 'raw', filename);
+  
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Statute PDF file missing from disk' });
+  }
+  
+  // Set content disposition to open inline rather than downloading
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+  res.sendFile(filePath);
+});
 
 /**
  * Health Endpoint
