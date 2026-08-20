@@ -26,8 +26,8 @@
     --color-surface: #151E2E;
     --color-surface-elevated: #1E293B;
     --color-text-primary: #F8FAFC;
-    --color-text-secondary: #94A3B8;
-    --color-text-muted: #64748B;
+    --color-text-secondary: #CBD5E1; /* slate-300 (formerly 400) */
+    --color-text-muted: #94A3B8; /* slate-400 (formerly 500) */
     --color-border: #334155;
     --color-accent: #4376B2;
     --color-accent-hover: #6F9BC8;
@@ -40,9 +40,54 @@
     @apply bg-background text-primary font-sans antialiased min-h-screen transition-colors duration-200;
   }
 
+  /* Enhance disabled state contrast */
+  button:disabled, input:disabled, select:disabled, textarea:disabled {
+    opacity: 0.75 !important;
+  }
+
+  /* Enhance placeholder contrast */
+  ::placeholder {
+    color: #64748B !important; /* slate-500 */
+    opacity: 1 !important;
+  }
+  .dark ::placeholder {
+    color: #94A3B8 !important; /* slate-400 */
+  }
+
   /* Accessible Focus States */
   *:focus-visible {
-    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-stone-50;
+    @apply outline-none ring-2 ring-accent ring-offset-2;
+    --tw-ring-offset-color: var(--color-background);
+  }
+
+  /* Accessibility: Text Size */
+  html.text-size-lg { font-size: 106.25%; /* 17px */ }
+  html.text-size-xl { font-size: 112.5%; /* 18px */ }
+
+  /* Accessibility: Reduced Motion */
+  html.reduced-motion *, html.reduced-motion *::before, html.reduced-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Accessibility: High Contrast (Light Mode) */
+  html.high-contrast:not(.dark) .text-slate-500,
+  html.high-contrast:not(.dark) .text-slate-600 { color: #1E293B; } /* slate-800 */
+  html.high-contrast:not(.dark) .text-slate-400 { color: #334155; } /* slate-700 */
+  html.high-contrast:not(.dark) .border-stone-200,
+  html.high-contrast:not(.dark) .border-stone-300,
+  html.high-contrast:not(.dark) .border-slate-200 { border-color: #94A3B8; } /* slate-400 */
+  html.high-contrast:not(.dark) .bg-stone-50 { background-color: #FFFFFF; } /* max contrast background */
+  html.high-contrast:not(.dark) .bg-stone-100 { background-color: #F1F5F9; border: 1px solid #94A3B8; }
+
+  /* Accessibility: High Contrast (Dark Mode Adjustments) */
+  html.dark.high-contrast {
+    --color-text-secondary: #E2E8F0;
+    --color-text-muted: #CBD5E1;
+    --color-border: #64748B;
+    --color-surface-elevated: #334155;
   }
 
   /* Dark mode overrides for 705e6a5 light classes */
