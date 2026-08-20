@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ActiveTab } from '../types';
-import { Scale, FileText, Sparkles, BookOpen, UserCheck, Shield, FileSearch } from 'lucide-react';
+import { Scale, FileText, Sparkles, BookOpen, UserCheck, Shield, FileSearch, Moon, Sun } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -11,6 +11,16 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
 }) => {
+  const [isDarkMode, setIsDarkMode] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm" role="banner">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -115,8 +125,15 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </nav>
 
-          {/* Right: DPDP badge only */}
-          <div className="flex items-center">
+          {/* Right: DPDP badge & Theme Toggle */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-secondary dark:hover:bg-surface-elevated dark:hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-legal-600 dark:focus:ring-accent"
+              aria-label="Toggle Dark Mode"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <div className="hidden lg:flex items-center space-x-1.5 text-slate-700 text-xs px-3 py-1.5 rounded-full bg-white border border-slate-200 font-medium shadow-sm">
               <Shield className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
               <span>DPDP Compliant</span>

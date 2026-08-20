@@ -8,6 +8,18 @@ export default {
   theme: {
     extend: {
       colors: {
+        background: 'var(--color-background)',
+        surface: 'var(--color-surface)',
+        'surface-elevated': 'var(--color-surface-elevated)',
+        primary: 'var(--color-text-primary)',
+        secondary: 'var(--color-text-secondary)',
+        muted: 'var(--color-text-muted)',
+        border: 'var(--color-border)',
+        accent: 'var(--color-accent)',
+        'accent-hover': 'var(--color-accent-hover)',
+        success: 'var(--color-success)',
+        warning: 'var(--color-warning)',
+        error: 'var(--color-error)',
         legal: {
           50: '#F4F7FB',
           100: '#E6EDF5',
@@ -39,8 +51,8 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['Merriweather', 'Georgia', 'serif'],
+        sans: ['"IBM Plex Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        serif: ['"Source Serif 4"', 'Merriweather', 'Georgia', 'serif'],
       },
       boxShadow: {
         'glow': '0 0 25px -5px rgba(245, 158, 11, 0.25)',
@@ -50,4 +62,3 @@ export default {
   },
   plugins: [],
 }
-
