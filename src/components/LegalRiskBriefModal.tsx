@@ -19,6 +19,7 @@ import {
   Scale,
   Lock
 } from 'lucide-react';
+import { ReadAloudButton } from './ReadAloudButton';
 
 interface LegalRiskBriefModalProps {
   brief: LegalRiskBrief | null;
@@ -115,7 +116,9 @@ export const LegalRiskBriefModal: React.FC<LegalRiskBriefModalProps> = ({
           </div>
 
           {/* Quick Action Buttons */}
-          <div className="flex items-center space-x-2 self-end sm:self-auto">
+          <div className="flex items-center space-x-2 self-end sm:self-auto flex-wrap">
+            <ReadAloudButton text={formatBriefAsText(brief)} />
+            
             <button
               onClick={handleCopyText}
               className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-700 text-xs font-medium text-slate-900 border border-slate-300 transition-colors"

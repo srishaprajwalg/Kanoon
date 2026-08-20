@@ -21,6 +21,7 @@ import { KanoonAIService } from '../services/aiService';
 import type { DocumentReviewReport, ReviewedClauseAnalysis, LegalRiskBrief, AdvocateProfile } from '../types';
 import { generateBriefFromReviewReport } from '../services/briefGenerator';
 import { LegalRiskBriefModal } from './LegalRiskBriefModal';
+import { ReadAloudButton } from './ReadAloudButton';
 
 interface DocumentReviewerProps {
   onNavigateToExpert?: (advocate?: AdvocateProfile) => void;
@@ -460,7 +461,10 @@ export const DocumentReviewer: React.FC<DocumentReviewerProps> = ({ onNavigateTo
 
             {/* Executive Summary */}
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-slate-700 text-sm space-y-1">
-              <div className="text-xs font-bold text-blue-400 uppercase tracking-wider">Executive Legal Summary</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs font-bold text-blue-400 uppercase tracking-wider">Executive Legal Summary</div>
+                <ReadAloudButton text={report.executiveSummary} />
+              </div>
               <p>{report.executiveSummary}</p>
             </div>
           </div>

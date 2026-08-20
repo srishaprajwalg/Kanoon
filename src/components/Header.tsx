@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ActiveTab } from '../types';
-import { Scale, FileText, Sparkles, BookOpen, UserCheck, Shield, FileSearch, Moon, Sun, Accessibility, Type, Contrast, MonitorPlay } from 'lucide-react';
+import { Scale, FileText, Sparkles, BookOpen, UserCheck, Shield, FileSearch, Moon, Sun, Accessibility, Type, Contrast, MonitorPlay, Volume2 } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -19,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [textSize, setTextSize] = React.useState<'default' | 'large' | 'xlarge'>(() => localStorage.getItem('a11y-text-size') as any || 'default');
   const [highContrast, setHighContrast] = React.useState(() => localStorage.getItem('a11y-high-contrast') === 'true');
   const [reducedMotion, setReducedMotion] = React.useState(() => localStorage.getItem('a11y-reduced-motion') === 'true');
+  const [readAloudEnabled, setReadAloudEnabled] = React.useState(() => localStorage.getItem('a11y-read-aloud') === 'true');
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   // Close accessibility menu on outside click or Escape
@@ -71,7 +72,10 @@ export const Header: React.FC<HeaderProps> = ({
     }
     localStorage.setItem('a11y-reduced-motion', String(reducedMotion));
 
-  }, [isDarkMode, textSize, highContrast, reducedMotion]);
+    localStorage.setItem('a11y-read-aloud', String(readAloudEnabled));
+    window.dispatchEvent(new Event('a11y-read-aloud-changed'));
+
+  }, [isDarkMode, textSize, highContrast, reducedMotion, readAloudEnabled]);
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm" role="banner">
@@ -269,6 +273,21 @@ export const Header: React.FC<HeaderProps> = ({
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-legal-600 focus:ring-offset-2 dark:focus:ring-accent dark:ring-offset-surface ${reducedMotion ? 'bg-legal-600 dark:bg-accent' : 'bg-slate-300 dark:bg-border'}`}
                     >
                       <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${reducedMotion ? 'translate-x-4' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+
+                  {/* Read Aloud */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Volume2 className="w-3.5 h-3.5 text-slate-700 dark:text-secondary" />
+                      <span className="text-xs font-semibold text-slate-700 dark:text-secondary">Read Aloud</span>
+                    </div>
+                    <button
+                      onClick={() => setReadAloudEnabled(!readAloudEnabled)}
+                      aria-pressed={readAloudEnabled}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-legal-600 focus:ring-offset-2 dark:focus:ring-accent dark:ring-offset-surface ${readAloudEnabled ? 'bg-legal-600 dark:bg-accent' : 'bg-slate-300 dark:bg-border'}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${readAloudEnabled ? 'translate-x-4' : 'translate-x-1'}`} />
                     </button>
                   </div>
                 </div>

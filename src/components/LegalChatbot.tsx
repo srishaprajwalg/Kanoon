@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Scale, ShieldCheck, ExternalLink, Sparkles, RefreshCw, BookOpen } from 'lucide-react';
+import { ReadAloudButton } from './ReadAloudButton';
 import { LegalRAGEngine } from '../services/ragEngine';
 import type { LegalStatuteCitation } from '../types';
 
@@ -169,7 +170,14 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = () => {
                     <span className="text-xs">Searching Union & Karnataka statutory databases...</span>
                   </div>
                 ) : (
-                  <div className="whitespace-pre-wrap">{msg.text}</div>
+                  <div className="space-y-3">
+                    <div className="whitespace-pre-wrap">{msg.text}</div>
+                    {msg.sender === 'bot' && (
+                      <div className="flex">
+                        <ReadAloudButton text={msg.text} />
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Statutory Citations Section */}

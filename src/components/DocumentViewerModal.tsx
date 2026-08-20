@@ -4,6 +4,7 @@ import { Printer, Download, Copy, X, CheckCircle2, Scale } from 'lucide-react';
 import { exportDocumentToPDF } from '../utils/pdfExporter';
 import { generateBriefFromDraftedDocument } from '../services/briefGenerator';
 import { LegalRiskBriefModal } from './LegalRiskBriefModal';
+import { ReadAloudButton } from './ReadAloudButton';
 
 interface DocumentViewerModalProps {
   document: GeneratedDocument | null;
@@ -58,6 +59,8 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
           </div>
 
           <div className="flex items-center space-x-2 flex-wrap">
+            <ReadAloudButton text={document.draftText} />
+            
             <button
               onClick={handleConsultExpert}
               className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1"
