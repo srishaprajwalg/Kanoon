@@ -179,6 +179,3 @@ The current iteration is a functional hackathon prototype. The following feature
 
 ## 12. Disclaimer
 **Hackathon Prototype / MVP.** Kanoon demonstrates a highly verifiable RAG architecture for legal documentation, but is not intended to serve as binding legal advice. Users should always verify important legal matters with qualified legal professionals.
-
-## 13. License
-*(Appropriate Open Source License applies. Kanoon is built for educational and hackathon demonstration purposes.)*
