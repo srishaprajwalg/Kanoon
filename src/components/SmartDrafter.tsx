@@ -291,42 +291,41 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
   return (
     <div className="space-y-8 pb-12">
       {/* Top Hero Banner */}
-      <div className="relative rounded-2xl glass-panel p-6 sm:p-8 overflow-hidden border border-amber-500/20 shadow-glow">
-        <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative rounded-2xl bg-white p-6 sm:p-8 border border-stone-200 shadow-sm">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded bg-stone-100 border border-stone-200 text-legal-700 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Semantic Vector RAG-Grounded AI Legal Drafts</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight">
-              Draft Plain-Language Contracts <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">Grounded in Authentic Indian Law</span>
+            <h1 className="text-2xl sm:text-3xl font-serif font-extrabold text-slate-900 tracking-tight">
+              Draft Plain-Language Contracts <span className="text-legal-700">Grounded in Authentic Indian Law</span>
             </h1>
-            <p className="text-slate-300 text-sm leading-relaxed">
+            <p className="text-slate-600 text-sm leading-relaxed max-w-xl">
               Every document is grounded by supplying actual retrieved statutory sections from Indian law (Contract Act 1872, Transfer of Property Act 1882, IT Act 2000) directly to Gemini AI.
             </p>
           </div>
 
           {/* Stepper indicators */}
-          <div className="flex items-center space-x-2 bg-slate-900/90 p-2 rounded-xl border border-slate-800 self-stretch md:self-auto justify-center">
+          <div className="flex items-center space-x-2 bg-stone-50 p-2 rounded-xl border border-stone-200 self-stretch md:self-auto justify-center">
             <button 
               onClick={() => setStep(1)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium ${step === 1 ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium ${step === 1 ? 'bg-white border border-stone-200 text-legal-700 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
             >
               <span>1. Template</span>
             </button>
-            <ChevronRight className="w-4 h-4 text-slate-600" />
+            <ChevronRight className="w-4 h-4 text-slate-400" />
             <button 
               onClick={() => setStep(2)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium ${step === 2 ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium ${step === 2 ? 'bg-white border border-stone-200 text-legal-700 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
             >
               <span>2. Terms & Check</span>
             </button>
-            <ChevronRight className="w-4 h-4 text-slate-600" />
+            <ChevronRight className="w-4 h-4 text-slate-400" />
             <button 
               disabled={!generatedDoc}
               onClick={() => generatedDoc && setStep(3)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium ${step === 3 ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-500'}`}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium ${step === 3 ? 'bg-white border border-stone-200 text-legal-700 font-bold shadow-sm' : 'text-slate-500'}`}
             >
               <span>3. Workspace & Citations</span>
             </button>
@@ -338,11 +337,11 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
       {step === 1 && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-100 flex items-center space-x-2">
-              <Layers className="w-5 h-5 text-amber-400" />
+            <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+              <Layers className="w-5 h-5 text-indigo-600" />
               <span>Select Document Type</span>
             </h2>
-            <span className="text-xs text-slate-400">Grounded in Indian Legal Frameworks</span>
+            <span className="text-xs text-slate-600">Grounded in Indian Legal Frameworks</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -352,29 +351,29 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                 <div
                   key={template.id}
                   onClick={() => handleSelectTemplate(template.id)}
-                  className={`cursor-pointer rounded-xl p-5 transition-all duration-200 glass-card relative flex flex-col justify-between border ${
+                  className={`cursor-pointer rounded-xl p-5 transition-all duration-200 bg-white relative flex flex-col justify-between border ${
                     isSelected
-                      ? 'border-amber-500 bg-amber-500/10 shadow-glow'
-                      : 'border-slate-800 hover:border-slate-700 hover:bg-slate-900/60'
+                      ? 'border-legal-600 ring-1 ring-legal-600 bg-legal-50'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-stone-50 shadow-sm'
                   }`}
                 >
                   {isSelected && (
-                    <div className="absolute top-3 right-3 text-amber-400">
+                    <div className="absolute top-4 right-4 text-legal-600">
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                   )}
 
                   <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-800 text-amber-400 inline-block mb-3 border border-slate-700">
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-white text-slate-600 inline-block mb-3 border border-slate-200">
                       {template.category}
                     </span>
-                    <h3 className="font-bold text-slate-100 text-base mb-1.5 pr-6">{template.name}</h3>
-                    <p className="text-xs text-slate-400 line-clamp-2 mb-4">{template.description}</p>
+                    <h3 className={`font-bold text-base mb-1.5 pr-6 ${isSelected ? 'text-legal-900' : 'text-slate-900'}`}>{template.name}</h3>
+                    <p className={`text-xs line-clamp-2 mb-4 ${isSelected ? 'text-legal-700' : 'text-slate-600'}`}>{template.description}</p>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
-                    <span>Target: <strong className="text-slate-300">{template.popularIn.split(',')[0]}</strong></span>
-                    <span className="text-amber-400/90 font-medium">⚡ {template.estimatedTime}</span>
+                  <div className={`pt-3 border-t flex items-center justify-between text-xs ${isSelected ? 'border-legal-200 text-legal-700' : 'border-slate-200 text-slate-600'}`}>
+                    <span>Target: <strong className={isSelected ? 'text-legal-900' : 'text-slate-700'}>{template.popularIn.split(',')[0]}</strong></span>
+                    <span className="font-medium">⚡ {template.estimatedTime}</span>
                   </div>
                 </div>
               );
@@ -384,7 +383,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
           <div className="flex justify-end pt-4">
             <button
               onClick={() => setStep(2)}
-              className="flex items-center space-x-2 px-6 py-3 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
+              className="flex items-center space-x-2 px-6 py-2.5 rounded-lg bg-legal-600 text-white font-bold hover:bg-legal-700 transition-all shadow-sm"
             >
               <span>Next: Input Terms & Validate</span>
               <ChevronRight className="w-5 h-5" />
@@ -398,52 +397,52 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-100 flex items-center space-x-2">
-                <FileText className="w-5 h-5 text-amber-400" />
+              <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                <FileText className="w-5 h-5 text-indigo-600" />
                 <span>Customizing: {selectedTemplate.name}</span>
               </h2>
-              <p className="text-xs text-slate-400">Fill in key terms. Missing data is flagged prior to drafting.</p>
+              <p className="text-xs text-slate-600">Fill in key terms. Missing data is flagged prior to drafting.</p>
             </div>
 
-            <button onClick={() => setStep(1)} className="text-xs text-amber-400 hover:underline">
+            <button onClick={() => setStep(1)} className="text-xs text-indigo-600 hover:underline">
               ← Change Template
             </button>
           </div>
 
           {/* MISSING INFO & COMPLETENESS VALIDATOR BANNER */}
-          <div className={`p-4 rounded-2xl border transition-all ${
+          <div className={`p-4 rounded-xl border transition-all ${
             validationResult.isComplete
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-              : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              : 'bg-amber-50 border-amber-200 text-amber-900'
           }`}>
-            <div className="flex items-center justify-between border-b border-slate-800/60 pb-3 mb-3">
+            <div className={`flex items-center justify-between border-b pb-3 mb-3 ${validationResult.isComplete ? 'border-emerald-200' : 'border-amber-200'}`}>
               <div className="flex items-center space-x-2">
                 {validationResult.isComplete ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-amber-400" />
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
                 )}
                 <span className="font-bold text-sm">
                   Document Completeness Score: {validationResult.score}/100
                 </span>
               </div>
-              <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-900 border border-slate-700">
+              <span className="text-xs px-2.5 py-0.5 rounded font-bold bg-white border border-stone-200 shadow-sm">
                 {validationResult.isComplete ? 'Ready for AI Drafting' : 'Missing Information Detected'}
               </span>
             </div>
 
             {validationResult.missingFields.length > 0 && (
               <div className="space-y-2 mb-3">
-                <span className="text-xs font-bold block text-slate-200">Required Input Corrections:</span>
+                <span className="text-xs font-bold block">Required Input Corrections:</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {validationResult.missingFields.map((mf, i) => (
-                    <div key={i} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs space-y-1">
-                      <span className="font-bold text-red-400 flex items-center space-x-1">
+                    <div key={i} className="p-2.5 rounded-lg bg-white border border-amber-100 text-xs space-y-1 shadow-sm">
+                      <span className="font-bold text-red-600 flex items-center space-x-1">
                         <span>•</span>
                         <span>{mf.fieldName}</span>
                       </span>
-                      <p className="text-slate-300 text-[11px]">{mf.message}</p>
-                      <p className="text-amber-400 text-[10px] italic">💡 {mf.suggestion}</p>
+                      <p className="text-slate-700 text-[11px]">{mf.message}</p>
+                      <p className="text-amber-700 text-[10px] font-medium">💡 {mf.suggestion}</p>
                     </div>
                   ))}
                 </div>
@@ -451,8 +450,8 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
             )}
 
             {validationResult.recommendations.length > 0 && (
-              <div className="space-y-1 text-xs text-slate-300">
-                <span className="font-bold block text-amber-400">Statutory Compliance Recommendations:</span>
+              <div className="space-y-1 text-xs text-slate-700">
+                <span className="font-bold block text-indigo-600">Statutory Compliance Recommendations:</span>
                 <ul className="list-disc list-inside space-y-1 text-[11px]">
                   {validationResult.recommendations.map((rec, idx) => (
                     <li key={idx}>{rec}</li>
@@ -463,18 +462,18 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
           </div>
 
           {!isSupportedTemplate ? (
-            <div className="glass-card p-8 rounded-2xl border border-amber-500/30 text-center space-y-4 my-6">
-              <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+            <div className="bg-white shadow-sm p-8 rounded-xl border border-stone-200 text-center space-y-4 my-6">
+              <div className="w-12 h-12 rounded-full bg-stone-100 text-slate-400 flex items-center justify-center mx-auto border border-stone-200">
                 <Lock className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-slate-100">{selectedTemplate.name}</h3>
-              <p className="text-sm text-slate-400 max-w-md mx-auto">
+              <h3 className="text-lg font-bold text-slate-900">{selectedTemplate.name}</h3>
+              <p className="text-sm text-slate-600 max-w-md mx-auto">
                 Statutory RAG grounding and legal draft templates for this category are currently under legal review and validation. Please select a supported document type.
               </p>
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 text-xs transition-colors shadow-lg shadow-amber-500/20"
+                className="px-5 py-2 rounded-lg bg-white border border-stone-300 text-slate-700 font-bold hover:bg-stone-50 text-xs transition-colors shadow-sm"
               >
                 ← Select Supported Template
               </button>
@@ -482,13 +481,13 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
           ) : (
             <>
           {/* STEP 2 SUB-TAB NAVIGATION */}
-          <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
+          <div className="flex items-center space-x-2 border-b border-slate-200 pb-3">
             <button
               onClick={() => setStep2SubTab('terms')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 step2SubTab === 'terms'
-                  ? 'bg-amber-500 text-slate-950 shadow-md'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
               }`}
             >
               <FileText className="w-4 h-4" />
@@ -499,14 +498,14 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               onClick={() => setStep2SubTab('clauses')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 step2SubTab === 'clauses'
-                  ? 'bg-amber-500 text-slate-950 shadow-md'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
               }`}
             >
               <Sliders className="w-4 h-4" />
               <span>2. Clause Library & Custom Riders</span>
               {(formData.selectedClauseConfigs?.length || 0) > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-950 text-amber-400 font-extrabold border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-50 text-indigo-600 font-extrabold border border-indigo-600/30">
                   {formData.selectedClauseConfigs?.length}
                 </span>
               )}
@@ -525,17 +524,17 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Party A (First Party) Card */}
-            <div className="glass-card p-5 rounded-2xl space-y-4 border border-slate-800">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-slate-200 text-sm flex items-center space-x-2">
-                  <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-xs flex items-center justify-center font-extrabold">1</span>
+            <div className="bg-white shadow-sm p-5 rounded-2xl space-y-4 border border-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                  <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 text-xs flex items-center justify-center font-extrabold">1</span>
                   <span>{meta.partyALabel}</span>
                 </h3>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Full Legal Name *</label>
+                  <label className="block text-slate-600 font-medium mb-1">Full Legal Name *</label>
                   <input
                     type="text"
                     value={formData.partyA.name}
@@ -543,21 +542,21 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                       ...prev,
                       partyA: { ...prev.partyA, name: e.target.value }
                     }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder={meta.partyAPlaceholder}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-400 font-medium mb-1">Entity Type</label>
+                    <label className="block text-slate-600 font-medium mb-1">Entity Type</label>
                     <select
                       value={formData.partyA.type}
                       onChange={(e) => setFormData(prev => ({
                         ...prev,
                         partyA: { ...prev.partyA, type: e.target.value as 'individual' | 'business' }
                       }))}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="individual">Individual Citizen</option>
                       <option value="business">Company / Business</option>
@@ -565,7 +564,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 font-medium mb-1">PAN / GST (Optional)</label>
+                    <label className="block text-slate-600 font-medium mb-1">PAN / GST (Optional)</label>
                     <input
                       type="text"
                       value={formData.partyA.panOrGst || ''}
@@ -573,13 +572,13 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                         ...prev,
                         partyA: { ...prev.partyA, panOrGst: e.target.value }
                       }))}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Full Address *</label>
+                  <label className="block text-slate-600 font-medium mb-1">Full Address *</label>
                   <input
                     type="text"
                     value={formData.partyA.address}
@@ -587,24 +586,24 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                       ...prev,
                       partyA: { ...prev.partyA, address: e.target.value }
                     }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
             </div>
 
             {/* Party B (Second Party) Card */}
-            <div className="glass-card p-5 rounded-2xl space-y-4 border border-slate-800">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-slate-200 text-sm flex items-center space-x-2">
-                  <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-xs flex items-center justify-center font-extrabold">2</span>
+            <div className="bg-white shadow-sm p-5 rounded-2xl space-y-4 border border-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                  <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 text-xs flex items-center justify-center font-extrabold">2</span>
                   <span>{meta.partyBLabel}</span>
                 </h3>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Full Legal Name *</label>
+                  <label className="block text-slate-600 font-medium mb-1">Full Legal Name *</label>
                   <input
                     type="text"
                     value={formData.partyB.name}
@@ -612,21 +611,21 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                       ...prev,
                       partyB: { ...prev.partyB, name: e.target.value }
                     }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder={meta.partyBPlaceholder}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-400 font-medium mb-1">Entity Type</label>
+                    <label className="block text-slate-600 font-medium mb-1">Entity Type</label>
                     <select
                       value={formData.partyB.type}
                       onChange={(e) => setFormData(prev => ({
                         ...prev,
                         partyB: { ...prev.partyB, type: e.target.value as 'individual' | 'business' }
                       }))}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="individual">Individual Citizen</option>
                       <option value="business">Company / Business</option>
@@ -634,7 +633,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 font-medium mb-1">Phone / Email</label>
+                    <label className="block text-slate-600 font-medium mb-1">Phone / Email</label>
                     <input
                       type="text"
                       value={formData.partyB.contact}
@@ -642,13 +641,13 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                         ...prev,
                         partyB: { ...prev.partyB, contact: e.target.value }
                       }))}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Full Address *</label>
+                  <label className="block text-slate-600 font-medium mb-1">Full Address *</label>
                   <input
                     type="text"
                     value={formData.partyB.address}
@@ -656,7 +655,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                       ...prev,
                       partyB: { ...prev.partyB, address: e.target.value }
                     }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -664,15 +663,15 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
           </div>
 
           {/* Key Financials & Jurisdiction Terms */}
-          <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4">
-            <h3 className="font-bold text-slate-200 text-sm flex items-center space-x-2 border-b border-slate-800 pb-3">
-              <Scale className="w-4 h-4 text-amber-400" />
+          <div className="bg-white shadow-sm p-5 rounded-2xl border border-slate-200 space-y-4">
+            <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2 border-b border-slate-200 pb-3">
+              <Scale className="w-4 h-4 text-indigo-600" />
               <span>Document Commercial Terms & Indian Legal Jurisdiction</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Indian State Jurisdiction</label>
+                <label className="block text-slate-600 font-medium mb-1">Indian State Jurisdiction</label>
                 <select
                   value={formData.state}
                   onChange={(e) => setFormData(prev => ({
@@ -680,7 +679,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                     state: e.target.value,
                     governingLawState: e.target.value
                   }))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="Karnataka">Karnataka</option>
                   <option value="Maharashtra">Maharashtra</option>
@@ -693,81 +692,81 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">City</label>
+                <label className="block text-slate-600 font-medium mb-1">City</label>
                 <input
                   type="text"
                   value={formData.city}
                   onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
               {meta.financialShow && (
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">{meta.financialLabel}</label>
+                  <label className="block text-slate-600 font-medium mb-1">{meta.financialLabel}</label>
                   <input
                     type="number"
                     value={formData.financialAmount}
                     onChange={(e) => setFormData(prev => ({ ...prev, financialAmount: Number(e.target.value) }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               )}
 
               {meta.depositShow && (
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">{meta.depositLabel}</label>
+                  <label className="block text-slate-600 font-medium mb-1">{meta.depositLabel}</label>
                   <input
                     type="number"
                     value={formData.securityDeposit || 0}
                     onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: Number(e.target.value) }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               )}
 
               {meta.durationShow && (
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">{meta.durationLabel}</label>
+                  <label className="block text-slate-600 font-medium mb-1">{meta.durationLabel}</label>
                   <input
                     type="number"
                     value={formData.durationMonths}
                     onChange={(e) => setFormData(prev => ({ ...prev, durationMonths: Number(e.target.value) }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               )}
 
               {meta.noticeShow && (
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">{meta.noticeLabel}</label>
+                  <label className="block text-slate-600 font-medium mb-1">{meta.noticeLabel}</label>
                   <input
                     type="number"
                     value={formData.noticePeriodDays}
                     onChange={(e) => setFormData(prev => ({ ...prev, noticePeriodDays: Number(e.target.value) }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               )}
 
               {meta.lockInShow && (
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">{meta.lockInLabel}</label>
+                  <label className="block text-slate-600 font-medium mb-1">{meta.lockInLabel}</label>
                   <input
                     type="number"
                     value={formData.lockInPeriodMonths || 0}
                     onChange={(e) => setFormData(prev => ({ ...prev, lockInPeriodMonths: Number(e.target.value) }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Dispute Resolution</label>
+                <label className="block text-slate-600 font-medium mb-1">Dispute Resolution</label>
                 <select
                   value={formData.disputeResolution}
                   onChange={(e) => setFormData(prev => ({ ...prev, disputeResolution: e.target.value as 'Arbitration' | 'Courts' | 'Mutual Conciliation' }))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="Arbitration">Fast Arbitration (Act 1996)</option>
                   <option value="Courts">Civil Court Jurisdiction</option>
@@ -777,16 +776,16 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
           </div>
 
           {/* Custom Specific Terms */}
-          <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="font-bold text-slate-200 text-sm flex items-center space-x-2">
-                <Plus className="w-4 h-4 text-amber-400" />
+          <div className="bg-white shadow-sm p-5 rounded-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                <Plus className="w-4 h-4 text-indigo-600" />
                 <span>Custom Specific Terms</span>
               </h3>
               <button
                 type="button"
                 onClick={handleAddClause}
-                className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-lg hover:bg-amber-500/20 font-medium flex items-center space-x-1"
+                className="text-xs bg-indigo-50 text-indigo-600 border border-indigo-600/30 px-3 py-1 rounded-lg hover:bg-indigo-100 font-medium flex items-center space-x-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Clause</span>
@@ -802,12 +801,12 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                     value={clause}
                     onChange={(e) => handleClauseChange(idx, e.target.value)}
                     placeholder="Enter custom requirement e.g., 'No structural alterations without written consent'"
-                    className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                   <button
                     type="button"
                     onClick={() => handleRemoveClause(idx)}
-                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
+                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-slate-100 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -819,17 +818,17 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
           )}
 
           {/* Privacy & AI Consent Box */}
-          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
-            <div className="flex items-center space-x-2 text-slate-300 font-bold">
-              <Lock className="w-4 h-4 text-amber-400" />
+          <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-2 text-xs">
+            <div className="flex items-center space-x-2 text-slate-700 font-bold">
+              <Lock className="w-4 h-4 text-indigo-600" />
               <span>Data Privacy & AI Processing Notice</span>
             </div>
-            <label className="flex items-start space-x-2 cursor-pointer text-slate-400 text-[11px]">
+            <label className="flex items-start space-x-2 cursor-pointer text-slate-600 text-[11px]">
               <input
                 type="checkbox"
                 checked={privacyConsentGiven}
                 onChange={(e) => setPrivacyConsentGiven(e.target.checked)}
-                className="mt-0.5 rounded border-slate-700 text-amber-500 focus:ring-amber-500 bg-slate-950"
+                className="mt-0.5 rounded border-slate-300 text-legal-600 focus:ring-legal-500 focus:ring-offset-0 bg-white"
               />
               <span>
                 I consent to sending contract parameter metadata to Kanoon AI API for statutory RAG grounding and legal drafting. Personal data is not stored or logged permanently.
@@ -841,7 +840,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
           <div className="flex items-center justify-between pt-4">
             <button
               onClick={() => setStep(1)}
-              className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 text-sm"
+              className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium hover:bg-slate-700 text-sm"
             >
               Back
             </button>
@@ -849,7 +848,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
             <button
               disabled={isGenerating || !validationResult.isComplete || !privacyConsentGiven}
               onClick={handleGenerate}
-              className="flex items-center space-x-2 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-extrabold hover:brightness-110 transition-all shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center space-x-2 px-8 py-3 rounded-lg bg-legal-600 text-white font-bold hover:bg-legal-700 transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-legal-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
                 <>
@@ -873,24 +872,24 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
       {step === 3 && generatedDoc && (
         <div className="space-y-8 animate-fadeIn">
           {/* Header Bar */}
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white shadow-sm p-5 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center space-x-3">
-                <h2 className="text-xl font-extrabold text-slate-100">{generatedDoc.title}</h2>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center space-x-1">
+                <h2 className="text-xl font-extrabold text-slate-900">{generatedDoc.title}</h2>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-600/30 flex items-center space-x-1">
                   <BookOpen className="w-3.5 h-3.5" />
                   <span>Statutory Grounded Draft</span>
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Parties: <strong className="text-slate-300">{formData.partyA.name}</strong> & <strong className="text-slate-300">{formData.partyB.name}</strong> ({generatedDoc.state})
+              <p className="text-xs text-slate-600">
+                Parties: <strong className="text-slate-700">{formData.partyA.name}</strong> & <strong className="text-slate-700">{formData.partyB.name}</strong> ({generatedDoc.state})
               </p>
             </div>
 
             <div className="flex items-center space-x-2 flex-wrap gap-y-2">
               <button
                 onClick={handleCopyText}
-                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700"
+                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-700 text-slate-900 text-xs font-medium border border-slate-300"
               >
                 {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? 'Copied' : 'Copy Text'}</span>
@@ -898,7 +897,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
 
               <button
                 onClick={handleDownloadPDF}
-                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow"
+                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-legal-600 hover:bg-legal-700 text-white text-xs font-bold shadow-sm"
               >
                 <Download className="w-4 h-4" />
                 <span>Export PDF</span>
@@ -906,7 +905,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
 
               <button
                 onClick={() => onOpenDocumentModal(generatedDoc)}
-                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-medium border border-amber-500/30"
+                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-stone-50 text-legal-700 text-xs font-medium border border-stone-300 shadow-sm"
               >
                 <Printer className="w-4 h-4" />
                 <span>Full-Screen Print</span>
@@ -921,23 +920,23 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
             <div className="lg:col-span-5 space-y-6">
 
               {/* RAG Statutory Citations Panel */}
-              <div className="glass-card p-5 rounded-2xl border border-amber-500/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-amber-400 text-sm flex items-center space-x-2">
-                    <BookOpen className="w-4 h-4" />
-                    <span>Retrieved Indian Legal Chunks (RAG)</span>
+              <div className="bg-white shadow-sm p-5 rounded-2xl border border-stone-200 space-y-3">
+                <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                  <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                    <BookOpen className="w-4 h-4 text-slate-500" />
+                    <span>Retrieved Statutory Citations (RAG)</span>
                   </h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-stone-100 text-slate-600 border border-stone-200">
                     India Code Verified
                   </span>
                 </div>
 
                 {generatedDoc.hasSufficientEvidence === false && (
-                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start space-x-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs flex items-start space-x-2">
+                    <AlertTriangle className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <strong className="block font-bold">Insufficient Statutory Evidence Warning</strong>
-                      <p className="text-[11px] text-amber-300/80 mt-0.5">
+                      <p className="text-[11px] text-indigo-500/80 mt-0.5">
                         {generatedDoc.evidenceWarning || 'Insufficient statutory evidence was retrieved to confidently support specific statutory section claims.'}
                       </p>
                     </div>
@@ -946,21 +945,21 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
 
                 <div className="space-y-2.5">
                   {(!generatedDoc.citations || generatedDoc.citations.length === 0) ? (
-                    <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center text-xs text-slate-400">
+                    <div className="p-4 rounded-xl bg-white border border-slate-200 text-center text-xs text-slate-600">
                       No directly relevant statutory references found
                     </div>
                   ) : (
                     generatedDoc.citations.map((cit, idx) => (
-                    <div key={idx} className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 text-xs">
-                      <div className="flex items-center justify-between font-bold text-slate-200">
-                        <span className="text-amber-400 flex items-center space-x-1">
+                    <div key={idx} className="p-3 rounded-xl bg-white border border-slate-200 space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between font-bold text-slate-900">
+                        <span className="text-indigo-600 flex items-center space-x-1">
                           <span>{cit.actShortTitle}</span>
                           {cit.sourceUrl && (
                             <a
                               href={cit.sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-amber-400 hover:text-amber-300 ml-1 inline-flex items-center"
+                              className="text-indigo-600 hover:text-indigo-500 ml-1 inline-flex items-center"
                               title="View official statutory text on India Code"
                             >
                               <ExternalLink className="w-3 h-3" />
@@ -970,38 +969,38 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                         <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
                           <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border uppercase font-bold ${
                             cit.jurisdiction === 'KARNATAKA' 
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                              ? 'bg-emerald-500/20 text-emerald-800 border-emerald-500/40' 
                               : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
                           }`}>
                             📍 {cit.jurisdiction || 'CENTRAL'}
                           </span>
                           {(cit.similarityScore !== undefined || cit.confidenceScore !== undefined) && (
-                            <span className="text-[10px] font-mono bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded border border-slate-700">
+                            <span className="text-[10px] font-mono bg-slate-100 text-emerald-400 px-1.5 py-0.5 rounded border border-slate-300">
                               Similarity: {(cit.similarityScore || cit.confidenceScore || 0.85).toFixed(2)} | {cit.confidenceLevel || 'High'}
                             </span>
                           )}
-                          <span className="font-mono text-[11px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">{cit.sectionNumber}</span>
+                          <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">{cit.sectionNumber}</span>
                         </div>
                       </div>
-                      <span className="font-semibold block text-slate-300">{cit.sectionTitle}</span>
+                      <span className="font-semibold block text-slate-700">{cit.sectionTitle}</span>
                       {cit.chapter && (
-                        <span className="text-[10px] text-slate-400 block font-mono">{cit.chapter} ({cit.actNumber || cit.year})</span>
+                        <span className="text-[10px] text-slate-600 block font-mono">{cit.chapter} ({cit.actNumber || cit.year})</span>
                       )}
-                      <p className="text-slate-400 text-[11px] font-serif italic border-l-2 border-amber-500/50 pl-2">
+                      <p className="text-slate-600 text-[11px] font-serif italic border-l-2 border-indigo-600/30 pl-2">
                         "{cit.statuteText}"
                       </p>
-                      <div className="pt-1 border-t border-slate-800/80 space-y-1 text-[10px] text-slate-400">
+                      <div className="pt-1 border-t border-slate-200 space-y-1 text-[10px] text-slate-600">
                         {cit.whyThisClause && (
-                          <div className="bg-slate-950/60 p-2 rounded-md border border-slate-800 text-slate-300">
-                            <span className="font-semibold text-amber-400 block mb-0.5">💡 Why this clause?</span>
-                            <p className="text-[10.5px] leading-relaxed text-slate-300">{cit.whyThisClause}</p>
+                          <div className="bg-slate-50 p-2 rounded-md border border-slate-200 text-slate-700">
+                            <span className="font-semibold text-indigo-600 block mb-0.5">💡 Why this clause?</span>
+                            <p className="text-[10.5px] leading-relaxed text-slate-700">{cit.whyThisClause}</p>
                           </div>
                         )}
                         <div className="flex items-center justify-between pt-0.5 flex-wrap gap-1">
-                          <span className="text-amber-400/90 font-mono">📌 {cit.relevanceExplanation}</span>
+                          <span className="text-indigo-600/90 font-mono">📌 {cit.relevanceExplanation}</span>
                           <div className="flex items-center space-x-2">
                             {cit.sourceTier && (
-                              <span className="text-[9px] font-mono text-slate-400 bg-slate-800 px-1 rounded">
+                              <span className="text-[9px] font-mono text-slate-600 bg-slate-100 px-1 rounded">
                                 {cit.sourceTier}
                               </span>
                             )}
@@ -1010,7 +1009,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                                 href={cit.sourceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-amber-400 hover:text-amber-300 underline font-mono flex items-center space-x-1 text-[10.5px]"
+                                className="text-indigo-600 hover:text-indigo-500 underline font-mono flex items-center space-x-1 text-[10.5px]"
                               >
                                 <span>View Official Source</span>
                                 <ExternalLink className="w-2.5 h-2.5" />
@@ -1021,7 +1020,7 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
                                 href={cit.pdfUrl || cit.sourceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-emerald-400 hover:text-emerald-300 underline font-mono flex items-center space-x-1 text-[10.5px]"
+                                className="text-emerald-400 hover:text-emerald-800 underline font-mono flex items-center space-x-1 text-[10.5px]"
                               >
                                 <span>View Official PDF</span>
                                 <FileText className="w-2.5 h-2.5" />
@@ -1036,54 +1035,54 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
               </div>
 
               {/* Plain Language Summary */}
-              <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-3">
-                <div className="flex items-center space-x-2 text-slate-200 font-bold text-sm">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+              <div className="bg-white shadow-sm p-5 rounded-2xl border border-slate-200 space-y-3">
+                <div className="flex items-center space-x-2 text-slate-900 font-bold text-sm">
+                  <Sparkles className="w-4 h-4 text-indigo-600" />
                   <span>Plain Language Summary</span>
                 </div>
-                <div className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">
+                <div className="text-xs text-slate-700 whitespace-pre-line leading-relaxed">
                   {generatedDoc.plainSummaryText}
                 </div>
               </div>
 
               {/* Clause Risk Workstation & Safer Replacement */}
-              <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4">
+              <div className="bg-white shadow-sm p-5 rounded-2xl border border-slate-200 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-slate-200 text-sm flex items-center space-x-2">
+                  <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
                     <Shield className="w-4 h-4 text-emerald-400" />
                     <span>Clause Risk & Safer Clause Suggestions</span>
                   </h3>
-                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                  <span className="text-xs font-bold text-emerald-400 bg-emerald-50 px-2 py-0.5 rounded">
                     Calculated Risk Score: {generatedDoc.riskScore}/100
                   </span>
                 </div>
 
                 <div className="space-y-3">
                   {generatedDoc.clauses.map((c, i) => (
-                    <div key={i} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
+                    <div key={i} className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2 text-xs">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-200">{c.clauseTitle}</span>
+                        <span className="font-bold text-slate-900">{c.clauseTitle}</span>
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                           c.riskLevel === 'high' || c.riskLevel === 'critical'
                             ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                             : c.riskLevel === 'medium'
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-indigo-50 text-indigo-600 border border-indigo-600/30'
+                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-200'
                         }`}>
                           {c.riskLevel} risk
                         </span>
                       </div>
 
-                      <p className="text-slate-300 leading-relaxed">{c.plainLanguageText}</p>
+                      <p className="text-slate-700 leading-relaxed">{c.plainLanguageText}</p>
 
-                      <div className="text-[11px] text-amber-400 italic">
+                      <div className="text-[11px] text-indigo-600 italic">
                         💡 <strong>Advice:</strong> {c.recommendation}
                       </div>
 
                       {c.saferAlternative && (
-                        <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                        <div className="pt-2 border-t border-slate-200 space-y-1.5">
                           <span className="text-[10px] font-bold uppercase text-emerald-400 block">Suggested Safer Alternative:</span>
-                          <p className="text-[11px] text-slate-300 bg-slate-950 p-2 rounded border border-slate-800">
+                          <p className="text-[11px] text-slate-700 bg-slate-50 p-2 rounded border border-slate-200">
                             "{c.saferAlternative}"
                           </p>
                           <button
@@ -1104,19 +1103,20 @@ export const SmartDrafter: React.FC<SmartDrafterProps> = ({ apiKey, onOpenDocume
 
             {/* Right Column: Grounded Legal Document Text Preview (7 cols) */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-700 space-y-6 shadow-2xl relative">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <span className="text-xs font-mono text-amber-400 uppercase tracking-widest font-bold">RAG GROUNDED LEGAL DRAFT</span>
-                  <span className="text-xs text-slate-400">Created: {generatedDoc.createdAt}</span>
+              <div className="bg-stone-100 p-4 sm:p-8 rounded-xl border border-stone-200 space-y-6">
+                <div className="flex items-center justify-between pb-2">
+                  <span className="text-xs font-mono text-slate-500 uppercase tracking-widest font-bold">Generated Draft</span>
+                  <span className="text-xs text-slate-500">Created: {generatedDoc.createdAt}</span>
                 </div>
 
-                <div className="whitespace-pre-wrap font-serif text-slate-200 text-sm sm:text-base leading-relaxed bg-slate-950/80 p-6 rounded-xl border border-slate-800 shadow-inner max-h-[600px] overflow-y-auto select-text">
+                {/* THE DOCUMENT PAPER */}
+                <div className="whitespace-pre-wrap font-serif text-slate-900 text-sm sm:text-base leading-relaxed bg-white p-8 sm:p-12 rounded border border-stone-300 shadow-md max-h-[600px] overflow-y-auto select-text mx-auto" style={{ maxWidth: '210mm' }}>
                   {generatedDoc.draftText}
                 </div>
 
                 {/* Responsible Disclaimer */}
-                <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 flex items-start space-x-2">
-                  <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 flex items-start space-x-2">
+                  <Info className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
                   <p>{generatedDoc.disclaimer}</p>
                 </div>
               </div>

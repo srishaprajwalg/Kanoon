@@ -2,52 +2,56 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap');
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 font-sans antialiased selection:bg-amber-500/30 selection:text-amber-200 min-h-screen;
+    @apply bg-stone-50 text-slate-900 font-sans antialiased min-h-screen;
+  }
+
+  /* Accessible Focus States */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-legal-600 ring-offset-2 ring-offset-stone-50;
   }
 }
 
-/* Custom scrollbars */
+/* Custom scrollbars - Light & Professional */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b192c;
+  background: #f1f5f9; /* slate-100 */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e3e6b;
+  background: #cbd5e1; /* slate-300 */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2e5a96;
+  background: #94a3b8; /* slate-400 */
 }
 
-/* Glassmorphism effects */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Base interactive elements accessibility */
+button, a {
+  @apply transition-colors duration-200;
 }
 
-.glass-card {
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.glass-gold {
-  background: rgba(217, 119, 6, 0.1);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
 }
 
 /* Print specific styles for generated documents */

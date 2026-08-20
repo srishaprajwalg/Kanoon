@@ -173,41 +173,41 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
       case 'critical':
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">CRITICAL RISK</span>;
       case 'high':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">HIGH RISK</span>;
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-600/30">HIGH RISK</span>;
       case 'medium':
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">MEDIUM RISK</span>;
       default:
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">LOW RISK</span>;
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-200">LOW RISK</span>;
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Header Info Banner */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-bold text-slate-100 flex items-center space-x-2">
-              <Sliders className="w-5 h-5 text-amber-400" />
+            <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+              <Sliders className="w-5 h-5 text-indigo-600" />
               <span>Clause Library & Custom Rider Customizer</span>
             </h3>
-            <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-indigo-50 text-indigo-600 border border-indigo-600/30">
               RAG Grounded
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             Select recommended legal riders, customize parameter parameters (notice days, liability caps), or add custom user clauses.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3 text-xs bg-slate-950 px-4 py-2 rounded-xl border border-slate-800 self-start md:self-auto">
+        <div className="flex items-center space-x-3 text-xs bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 self-start md:self-auto">
           <div className="text-right">
-            <span className="text-slate-400 block text-[11px]">Selected Clauses</span>
-            <strong className="text-amber-400 font-mono text-sm">{selectedConfigs.length} Active</strong>
+            <span className="text-slate-600 block text-[11px]">Selected Clauses</span>
+            <strong className="text-indigo-600 font-mono text-sm">{selectedConfigs.length} Active</strong>
           </div>
           <button
             onClick={() => setShowCustomForm(true)}
-            className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors shadow"
+            className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-colors shadow"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Custom Clause</span>
@@ -216,7 +216,7 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
       </div>
 
       {/* Category Pills & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
           {categories.map((cat) => {
             const isActive = activeCategory === cat;
@@ -228,8 +228,8 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
                 onClick={() => setActiveCategory(cat)}
                 className={`px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-all ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950 font-extrabold shadow-sm'
-                    : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-800'
+                    ? 'bg-indigo-600 text-white font-extrabold shadow-sm'
+                    : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
                 {label}
@@ -245,22 +245,22 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
             placeholder="Search clause library..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
       </div>
 
       {/* Custom Clause Add Modal / Form Overlay */}
       {showCustomForm && (
-        <div className="p-5 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-4 animate-fadeIn">
+        <div className="p-5 rounded-2xl bg-amber-950/20 border border-indigo-600/30 space-y-4 animate-fadeIn">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-amber-400 flex items-center space-x-2">
+            <h4 className="text-sm font-bold text-indigo-600 flex items-center space-x-2">
               <Edit3 className="w-4 h-4" />
               <span>Create Custom User Rider / Clause</span>
             </h4>
             <button
               onClick={() => setShowCustomForm(false)}
-              className="text-xs text-slate-400 hover:text-slate-200"
+              className="text-xs text-slate-600 hover:text-slate-900"
             >
               Cancel
             </button>
@@ -268,49 +268,49 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div>
-              <label className="block text-slate-400 mb-1">Clause Title *</label>
+              <label className="block text-slate-600 mb-1">Clause Title *</label>
               <input
                 type="text"
                 placeholder="e.g. Special Parking Facility Rights"
                 value={newCustomTitle}
                 onChange={(e) => setNewCustomTitle(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-slate-200 focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
             <div>
-              <label className="block text-slate-400 mb-1">Category / Purpose</label>
+              <label className="block text-slate-600 mb-1">Category / Purpose</label>
               <input
                 type="text"
                 placeholder="e.g. Commercial Covenant"
                 value={newCustomCategory}
                 onChange={(e) => setNewCustomCategory(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-slate-200 focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1 text-xs">Clause Content Text *</label>
+            <label className="block text-slate-600 mb-1 text-xs">Clause Content Text *</label>
             <textarea
               rows={3}
               placeholder="Enter the full text of your custom clause..."
               value={newCustomText}
               onChange={(e) => setNewCustomText(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-amber-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 
           <div className="flex justify-end space-x-2">
             <button
               onClick={() => setShowCustomForm(false)}
-              className="px-3 py-1.5 rounded-xl text-xs bg-slate-800 text-slate-300 hover:bg-slate-700"
+              className="px-3 py-1.5 rounded-xl text-xs bg-slate-100 text-slate-700 hover:bg-slate-700"
             >
               Discard
             </button>
             <button
               disabled={!newCustomTitle.trim() || !newCustomText.trim()}
               onClick={handleAddCustomClause}
-              className="px-4 py-1.5 rounded-xl text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold disabled:opacity-50"
+              className="px-4 py-1.5 rounded-xl text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold disabled:opacity-50"
             >
               Add to Selected Clause Set
             </button>
@@ -321,7 +321,7 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
       {/* User Custom Clauses List (if any added) */}
       {customClauses.length > 0 && (
         <div className="space-y-3">
-          <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center space-x-2">
+          <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider flex items-center space-x-2">
             <Sparkles className="w-3.5 h-3.5" />
             <span>User Custom Riders ({customClauses.length})</span>
           </h4>
@@ -329,16 +329,16 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
             {customClauses.map((c) => (
               <div
                 key={c.id}
-                className="p-3.5 rounded-xl bg-slate-900 border border-amber-500/30 flex items-start justify-between gap-3 text-xs"
+                className="p-3.5 rounded-xl bg-white border border-indigo-600/30 flex items-start justify-between gap-3 text-xs"
               >
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-slate-100">{c.title}</span>
-                    <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-semibold">
+                    <span className="font-bold text-slate-900">{c.title}</span>
+                    <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-semibold">
                       {c.category}
                     </span>
                   </div>
-                  <p className="text-slate-300 font-mono text-[11px]">"{c.clauseText}"</p>
+                  <p className="text-slate-700 font-mono text-[11px]">"{c.clauseText}"</p>
                 </div>
                 <button
                   onClick={() => handleRemoveCustomClause(c.id)}
@@ -364,10 +364,10 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
           return (
             <div
               key={item.id}
-              className={`glass-panel p-4 rounded-2xl border transition-all space-y-3 flex flex-col justify-between ${
+              className={`bg-white shadow-sm p-4 rounded-2xl border transition-all space-y-3 flex flex-col justify-between ${
                 selected
-                  ? 'border-amber-500 bg-amber-500/10 shadow-glow'
-                  : 'border-slate-800 hover:border-slate-700 bg-slate-900/60'
+                  ? 'border-indigo-600/30 bg-indigo-600 shadow-md'
+                  : 'border-slate-200 hover:border-slate-300 bg-white'
               }`}
             >
               <div className="space-y-2">
@@ -375,44 +375,44 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
-                      <h4 className="font-bold text-slate-100 text-sm">{item.name}</h4>
+                      <h4 className="font-bold text-slate-900 text-sm">{item.name}</h4>
                       {isRecommended && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/20 text-blue-300 border border-blue-500/30">
                           Recommended
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400">{item.shortDescription}</p>
+                    <p className="text-xs text-slate-600">{item.shortDescription}</p>
                   </div>
                   <div>{getRiskBadge(item.riskLevel)}</div>
                 </div>
 
                 {/* Plain English Toggle & Preview */}
-                <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-amber-400 font-bold flex items-center space-x-1">
+                    <span className="text-indigo-600 font-bold flex items-center space-x-1">
                       <BookOpen className="w-3 h-3" />
                       <span>In Plain English:</span>
                     </span>
                     <button
                       onClick={() => setExpandedClauseId(isExpanded ? null : item.id)}
-                      className="text-slate-400 hover:text-slate-200 flex items-center space-x-1 text-[10px]"
+                      className="text-slate-600 hover:text-slate-900 flex items-center space-x-1 text-[10px]"
                     >
                       <span>{isExpanded ? 'Hide Details' : 'View Full Text'}</span>
                       {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                     </button>
                   </div>
-                  <p className="text-slate-300 leading-relaxed text-[11px]">{item.plainEnglishExplanation}</p>
+                  <p className="text-slate-700 leading-relaxed text-[11px]">{item.plainEnglishExplanation}</p>
 
                   {isExpanded && (
                     <div className="pt-2 border-t border-slate-850 space-y-2 text-[11px] animate-fadeIn">
                       <div>
-                        <strong className="text-slate-400 block">Why It Matters:</strong>
-                        <p className="text-slate-300">{item.whyItMatters}</p>
+                        <strong className="text-slate-600 block">Why It Matters:</strong>
+                        <p className="text-slate-700">{item.whyItMatters}</p>
                       </div>
                       <div>
-                        <strong className="text-slate-400 block">Default Legal Text:</strong>
-                        <p className="text-slate-300 font-mono text-[10px] bg-slate-900 p-2 rounded border border-slate-800">
+                        <strong className="text-slate-600 block">Default Legal Text:</strong>
+                        <p className="text-slate-700 font-mono text-[10px] bg-white p-2 rounded border border-slate-200">
                           "{config ? config.clauseText : item.defaultClauseText}"
                         </p>
                       </div>
@@ -422,8 +422,8 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
 
                 {/* Parameter Selection (if clause is selected & has parameters) */}
                 {selected && item.parameters && item.parameters.length > 0 && (
-                  <div className="bg-slate-900 p-3 rounded-xl border border-amber-500/20 space-y-2 text-xs">
-                    <span className="text-amber-400 font-bold text-[11px] block flex items-center space-x-1">
+                  <div className="bg-white p-3 rounded-xl border border-indigo-600/30 space-y-2 text-xs">
+                    <span className="text-indigo-600 font-bold text-[11px] block flex items-center space-x-1">
                       <Sliders className="w-3 h-3" />
                       <span>Customize Clause Parameters:</span>
                     </span>
@@ -432,12 +432,12 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
 
                       return (
                         <div key={p.key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-                          <label className="text-slate-300 text-[11px]">{p.label}</label>
+                          <label className="text-slate-700 text-[11px]">{p.label}</label>
                           {p.type === 'select' && p.options ? (
                             <select
                               value={String(currentValue)}
                               onChange={(e) => handleParamChange(item, p.key, e.target.value)}
-                              className="bg-slate-950 border border-slate-700 rounded-lg text-xs text-amber-300 p-1.5 focus:outline-none focus:border-amber-500 font-mono"
+                              className="bg-slate-50 border border-slate-300 rounded-lg text-xs text-indigo-500 p-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
                             >
                               {p.options.map((opt) => (
                                 <option key={String(opt.value)} value={String(opt.value)}>
@@ -450,7 +450,7 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
                               type={p.type}
                               value={String(currentValue)}
                               onChange={(e) => handleParamChange(item, p.key, e.target.value)}
-                              className="bg-slate-950 border border-slate-700 rounded-lg text-xs text-amber-300 p-1.5 focus:outline-none focus:border-amber-500 font-mono w-28"
+                              className="bg-slate-50 border border-slate-300 rounded-lg text-xs text-indigo-500 p-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono w-28"
                             />
                           )}
                         </div>
@@ -467,8 +467,8 @@ export const ClauseCustomizer: React.FC<ClauseCustomizerProps> = ({
                   onClick={() => handleToggleClause(item)}
                   className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-colors ${
                     selected
-                      ? 'bg-emerald-500 text-slate-950'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-slate-100 hover:bg-slate-700 text-slate-900 border border-slate-300'
                   }`}
                 >
                   {selected ? (
